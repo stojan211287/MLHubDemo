@@ -5,6 +5,8 @@ import pandas as pd
 import urllib.request
 from urllib.error import URLError
 
+from utils import ensure_local_dir
+
 
 class DataNotFoundLocally(Exception):
     pass
@@ -15,6 +17,7 @@ class DataLoader:
     def __init__(self, local_data_dir):
 
         self.local_data_dir = local_data_dir
+        ensure_local_dir(self.local_data_dir)
 
     def load_data(self, data_path):
 
