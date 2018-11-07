@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block startup_js %}
+    <script type="text/javascript">
+        function make_table_from_json(data_json) {
+
+            var first_feature_name = Object.keys(data_json)[0];
+            var no_of_data_points = Object.values(data_json[first_feature_name]).length;
+
+            var tableHeader = "<thead class='thead-dark'>";
+            var tableContent = "<tbody>";
+
+            for (var feature_name in data_json) {
+                tableHeader = tableHeader + "<th>"+feature_name+"</th>";
+            }
+
+            tableHeader = tableHeader + "</thead>";
+
+            for (i = 0; i < no_of_data_points; i++) {
+
+                tableContent = tableContent + "<tr>";
+
+                for (feature_name in data_json) {
+                    var feature_value = Object.values(data_json[feature_name])[i]
+                    tableContent = tableContent +
+                                   "<td>" +
+                                   Number.parseFloat(feature_value).toFixed(4) +
+                                   "</td>";
+                }
+                tableContent = tableContent + "</tr>";
+            }
+
+            tableContent = tableContent + "</tbody>";
+
+            return tableHeader+tableContent;
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1 align="center" class="jumbotron"> Feature transformation explorer</h1>
+    {% if selected_dataset %}
+        <h3 align="center"> You are exploring the dataset "{{ selected_dataset }}"</h3>
+    {% endif %}
+    </br>
+    <div class="container">
+        <form action="{{ url_for('features') }}" method="POST">
+            <div class="form-group">
+                <label for="select_data">Please select a dataset: </label>
+                <select class="form-control" id="select_data" name="select_data">
+                    {% for dataset_name, dataset_link in datasets.items() %}
+                        <option value="{{ dataset_name }}">{{ dataset_name }}</option>
+                    {% endfor %}
+                </select>
+                </br>
+                {{ form.code(cols="62", rows="25", id="large") }}
+                </br>
+                <input type="submit" value="Submit code" class="btn btn-primary"/>
+            </div>
+        </form>
+        <div>
+            {% if raw_data %}
+            <h3 align="center">Raw features</h3>
+            <table id="raw_feature_table" class="table"></table>
+                <script type=text/javascript>
+                    document.getElementById("raw_feature_table")
+                            .innerHTML = make_table_from_json({{ raw_data | safe }});
+                </script>
+                {% if features %}
+                    <h3 align="center">Transformed features</h3>
+                    <div><table id="transformed_feature_table" class="table"></table></div>
+
+                    <script type=text/javascript>
+                       document.getElementById("transformed_feature_table")
+                               .innerHTML = make_table_from_json({{ features | safe }});
+                    </script>
+                {% elif transform_error%}
+                    <p>
+                        An error occurred when parsing your feature transformation code. The error was:
+                        </br>
+                        <p>
+                            <strong>
+                             {{ transform_error['error'] }}
+                            </strong>
+                        </p>
+                        <p>
+                            {{ transform_error['traceback'] }}
+                        </p>
+                    </p>
+                {% else %}
+                    <h3 align="center">No transformed features to display</h3>
+                    <p>
+                        This section will contain preview of your transformed features, once
+                        you have submitted valid feature transform code, using the 'Submit'
+                        button on the left.
+                    </p>
+                {% endif %}
+            {% elif data_loading_error %}
+            <p>
+                An error occurred while attempting to load raw data. The error was:
+                </br>
+                <p>
+                    <strong>
+                     {{ data_loading_error['error'] }}
+                    </strong>
+                </p>
+                <p>
+                    {{ data_loading_error['traceback'] }}
+                </p>
+            </p>
+            {% else %}
+            <h3 align="center">No dataset has currently been selected.</h3>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

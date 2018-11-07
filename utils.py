@@ -4,28 +4,28 @@ import types
 
 default_feature_code = \
 """FeatureDef(
-        feature_name="log1pOf1",
-        feature_kind="numeric",
-        feature_recipe={
-                    "generators": [1],
-                    "function": np.log1p
-                    }
+        name="log1pOfFixedAcidity",
+        kind="numeric",
+        recipe={
+                "generators": ["fixed acidity"],
+                "function": np.log1p
+                }
 );
 FeatureDef(
-        feature_name="sumOfLog1pOf1And2",
-        feature_kind="numeric",
-        feature_recipe={
-                    "generators": [1, 2],
-                    "function": lambda x, y: np.log1p(x)+np.log1p(y)
-                    }
+        name="sumOfLog1pOfpHAndDensity",
+        kind="numeric",
+        recipe={
+                "generators": ["pH", "density"],
+                "function": lambda x, y: np.log1p(x)+np.log1p(y)
+                }
 );
 FeatureDef(
-        feature_name="log1pOfSumOf1And2",
-        feature_kind="numeric",
-        feature_recipe={
-                    "generators": [1, 2],
-                    "function": lambda x, y: np.log1p(np.array(x)+np.array(y))
-                    }
+        name="log1pOfSumOfpHAndDensity",
+        kind="numeric",
+        recipe={
+                "generators": ["pH", "density"],
+                "function": lambda x, y: np.log1p(np.array(x)+np.array(y))
+                }
 );
 """
 

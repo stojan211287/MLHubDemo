@@ -26,14 +26,22 @@ class TFModel:
 
         try:
             assert isinstance(features, pd.DataFrame)
-            assert isinstance(target, pd.Series)
+            assert isinstance(target, str)
 
         except AssertionError:
-            raise ValueError("The TFModel.train has the signature features: pd.DataFrame, target: pd.Series")
+            raise ValueError("The TFModel.train has the signature features: pd.DataFrame, target: String")
 
-        training_input_fn = tf.estimator.inputs.pandas_input_fn(x=features,
-                                                                y=target,
-                                                                batch_size=features.shape[0],
+        target_column = features[target]
+
+        # SEPARATE TARGET COLUMN AND REST OF FEATURES
+        features_without_target = features.drop(target, axis=1)
+
+        print(target_column.head())
+        print(features_without_target.head())
+
+        training_input_fn = tf.estimator.inputs.pandas_input_fn(x=features_without_target,
+                                                                y=target_column,
+                                                                batch_size=features_without_target.shape[0],
                                                                 num_epochs=num_steps,
                                                                 shuffle=False)
         instance_model_params = self.model_params.copy()

@@ -8,7 +8,19 @@ from urllib.error import URLError
 from utils import ensure_local_dir
 
 
-class DataNotFoundLocally(Exception):
+class DataLoadingError(Exception):
+    pass
+
+
+class DataNotFoundLocally(DataLoadingError):
+    pass
+
+
+class DataNotFoundRemotly(DataLoadingError):
+    pass
+
+
+class DatasetFormatNotSupported(DataLoadingError):
     pass
 
 
@@ -30,7 +42,16 @@ class DataLoader:
         if data_path.startswith("http"):
             downloaded_file = self._download_and_cache_data(data_url=data_path)
 
-            return pd.read_csv(downloaded_file, header=None)
+            if downloaded_file.split(".")[-1] == "data":
+                return pd.read_csv(downloaded_file,
+                                   header=None,
+                                   sep=",")
+            elif downloaded_file.split(".")[-1] == "csv":
+                return pd.read_csv(downloaded_file,
+                                   header=0,
+                                   sep=";")
+            else:
+                raise DatasetFormatNotSupported
         else:
             try:
                 return pd.read_csv(data_path)
@@ -55,7 +76,8 @@ class DataLoader:
                     shutil.copyfileobj(response, out_file)
 
             except URLError:
-                raise ValueError("File %s not found at %s" % (save_file_name, data_url))
+                raise DataNotFoundRemotly("File %s not found at %s" %
+                                          (save_file_name, data_url))
 
         return save_file_name
 

@@ -8,11 +8,11 @@ from operator import itemgetter
 
 class FeatureDef:
 
-        def __init__(self, feature_name, feature_kind, feature_recipe=None):
+        def __init__(self, name, kind, recipe=None):
 
-            self.name = feature_name
-            self.kind = feature_kind
-            self.recipe = feature_recipe
+            self.name = name
+            self.kind = kind
+            self.recipe = recipe
 
             self.wrapper = namedtuple("Feature", ["name", "kind", "values"])
 
@@ -109,32 +109,36 @@ if __name__ == "__main__":
 
     URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data"
 
-    data_loader = DataLoader()
+    data_loader = DataLoader(local_data_dir="./data")
     data = data_loader.load_data(data_path=URL)
 
     print(data.head())
     print(data.columns)
 
     features = [
-                FeatureDef(feature_name="log1pOf1",
-                           feature_kind="numeric",
-                           feature_recipe={"generators": [1],
-                                           "function": np.log1p
-                                            }),
-                FeatureDef(feature_name="sumOfLog1pOf1And2",
-                           feature_kind="numeric",
-                           feature_recipe={"generators": [1, 2],
-                                           "function": lambda x, y: np.log1p(x)+np.log1p(y)}),
-                FeatureDef(feature_name="log1pOfSumOf1And2",
-                           feature_kind="numeric",
-                           feature_recipe={"generators": [1, 2],
-                                           "function": lambda x, y: np.log1p(np.array(x)+np.array(y))}),
-                FeatureDef(feature_name=3,
-                           feature_kind="numeric"),
-                FeatureDef(feature_name="3rdFeature",
-                           feature_kind="numeric",
-                           feature_recipe={"generators": [3],
-                                           "function": lambda x: np.array(x)}),
+                FeatureDef(name="log1pOf1",
+                           kind="numeric",
+                           recipe={
+                                    "generators": [1],
+                                    "function": np.log1p
+                                   }),
+                FeatureDef(name="sumOfLog1pOf1And2",
+                           kind="numeric",
+                           recipe={
+                                    "generators": [1, 2],
+                                    "function": lambda x, y: np.log1p(x)+np.log1p(y)}),
+                FeatureDef(name="log1pOfSumOf1And2",
+                           kind="numeric",
+                           recipe={
+                                    "generators": [1, 2],
+                                    "function": lambda x, y: np.log1p(np.array(x)+np.array(y))}),
+                FeatureDef(name=3,
+                           kind="numeric"),
+                FeatureDef(name="3rdFeature",
+                           kind="numeric",
+                           recipe={
+                                    "generators": [3],
+                                    "function": lambda x: np.array(x)}),
                 ]
 
     parser = FeatureParser(features=features)

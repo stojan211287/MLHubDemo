@@ -1,100 +1,33 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html lang="en">
+{% block content %}
+<h1 align="center">Welcome to MLHub</h1>
+<div class="container">
+    <div>
+        <p>
+        This is a ripoff of FloydHub that has waay fewer features. To start, select
+        one of the playgrounds from the navigation bar or the menu below.
+        </p>
+    </div>
+</div>
+<div class="container">
+    <div class="list-group">
+        <a href="{{ url_for('features') }}"
+           class="list-group-item list-group-item-action active">
+            Data loading and feature transformations
+        </a>
+        </br>
+        <a href="{{ url_for('training') }}"
+           class="list-group-item list-group-item-action active">
+            Model training and evaluation
+        </a>
+        </br>
+        <a href="{{ url_for('features') }}"
+           class="list-group-item list-group-item-action active">
+            Model deployment testing
+        </a>
+    </div>
+</div>
 
-    <head>
-        <link rel="stylesheet"
-              href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 
-        <link rel="stylesheet"
-              href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap-theme.min.css">
-
-        <link rel="stylesheet"
-              href="{{url_for('.static', filename='style.css')}}">
-
-
-        <title> Welcome to MicroFloydHub! </title>
-
-        <script type="text/javascript">
-            function make_table_from_json(data_json) {
-
-                var first_feature_name = Object.keys(data_json)[0];
-                var no_of_data_points = Object.values(data_json[first_feature_name]).length;
-
-                var tableHeader = "<thead class='thead-dark'>";
-                var tableContent = "<tbody>";
-
-                for (var feature_name in data_json) {
-                    tableHeader = tableHeader + "<th>"+feature_name+"</th>";
-                }
-
-                tableHeader = tableHeader + "</thead>";
-
-                for (i = 0; i < no_of_data_points; i++) {
-
-                    tableContent = tableContent + "<tr>";
-
-                    for (feature_name in data_json) {
-                        var feature_value = Object.values(data_json[feature_name])[i]
-                        tableContent = tableContent +
-                                       "<td>" +
-                                       Number.parseFloat(feature_value).toFixed(4) +
-                                       "</td>";
-                    }
-                    tableContent = tableContent + "</tr>";
-                }
-
-                tableContent = tableContent + "</tbody>";
-
-                return tableHeader+tableContent;
-            }
-        </script>
-    </head>
-
-    <body>
-        <h1 align="center" class="jumbotron jumbotron-fluid"> Feature transformation explorer</h1>
-        <div class="container">
-            <form action="{{ url_for('index') }}" method="POST">
-                <div class="form-group">
-                    {{ form.code.label(id="large") }}
-                    </br>
-                    </br>
-                    {{ form.code(cols="62", rows="25", id="large") }}
-                    </br>
-                    <input type="submit" value="Submit code" id="larger"/>
-                </div>
-            </form>
-            <div>
-                <h3 align="center">Raw features</h3>
-                <table id="raw_feature_table" class="table"></table>
-                    <script type=text/javascript>
-                        document.getElementById("raw_feature_table")
-                                .innerHTML = make_table_from_json({{raw_data|safe}});
-                    </script>
-                {% if has_transformed %}
-                    <h3 align="center">Transformed features</h3>
-                    <div><table id="transformed_feature_table" class="table"></table></div>
-
-                    <script type=text/javascript>
-                       document.getElementById("transformed_feature_table")
-                               .innerHTML = make_table_from_json({{features|safe}});
-                    </script>
-                {% elif error%}
-                    <p>
-                        An error occured when parsing your feature transformation code. The error was:
-                        </br>
-                        <strong>
-                             {{ error }}
-                        </strong>
-                    </p>
-                {% else %}
-                    <p>
-                        This section will contain preview of your transformed features, once
-                        you have submitted valid feature transform code, using the 'Submit'
-                        button on the left.
-                    </p>
-                {% endif %}
-            </div>
-        </div>
-    </body>
-</html>
+{% endblock %}

@@ -14,22 +14,22 @@ def main():
     data = data_loader.load_data(data_path=URL)
 
     features = [
-        FeatureDef(feature_name="log1pOf1",
-                   feature_kind="numeric",
-                   feature_recipe={"generators": [1],
+        FeatureDef(name="log1pOf1",
+                   kind="numeric",
+                   recipe={"generators": [1],
                                    "function": np.log1p
-                                   }),
-        FeatureDef(feature_name="sumOfLog1pOf1And2",
-                   feature_kind="numeric",
-                   feature_recipe={"generators": [1, 2],
+                           }),
+        FeatureDef(name="sumOfLog1pOf1And2",
+                   kind="numeric",
+                   recipe={"generators": [1, 2],
                                    "function": lambda x, y: np.log1p(x) + np.log1p(y)}),
-        FeatureDef(feature_name="log1pOfSumOf1And2",
-                   feature_kind="numeric",
-                   feature_recipe={"generators": [1, 2],
+        FeatureDef(name="log1pOfSumOf1And2",
+                   kind="numeric",
+                   recipe={"generators": [1, 2],
                                    "function": lambda x, y: np.log1p(np.array(x) + np.array(y))}),
-        FeatureDef(feature_name="3rdFeature",
-                   feature_kind="numeric",
-                   feature_recipe={"generators": [3],
+        FeatureDef(name="3rdFeature",
+                   kind="numeric",
+                   recipe={"generators": [3],
                                    "function": lambda x: np.array(x)}),
     ]
 

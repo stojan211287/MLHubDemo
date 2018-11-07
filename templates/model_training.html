@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 align="center" class="jumbotron"> Model training explorer</h1>
+
+<div class="container">
+    <form action="{{ url_for('training') }}" method="POST">
+        <div class="form-group">
+            <label for="select_data">Select a dataset: </label>
+            <select class="form-control" id="select_data" name="select_data">
+                {% for dataset_name, dataset_link in datasets.items() %}
+                    <option value="{{ dataset_name }}">{{ dataset_name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="select_data">Select a model class: </label>
+            <select class="form-control" id="select_model" name="select_model">
+                <option value="DNNClassifier">DNNClassifer</option>
+            </select>
+
+            </br>
+            {{ form.code(cols="62", rows="25", id="large") }}
+            </br>
+            <input type="submit" value="Submit"/>
+        </div>
+    </form>
+    {% if success %}
+    <div>
+        <p>
+            Model training successful!
+        </p>
+    </div>
+    {% elif not success %}
+    <div>
+        <p>
+            Model training unsuccessful!
+        </p>
+    </div>
+    {% else %}
+    <div>
+        <p>
+            Model training unsuccessful!
+        </p>
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

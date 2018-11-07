@@ -2,10 +2,6 @@
     font-size: 20px;
 }
 
-#larger {
-    font-size: 25px;
-}
-
 .container {
     display: flex;
     flex-direction: row;
@@ -19,6 +15,10 @@
 }
 
 .table th {
+    text-align: center;
+}
+
+.list-group-item {
     text-align: center;
 }
 
