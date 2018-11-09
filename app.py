@@ -1,16 +1,15 @@
-import os
 import traceback
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, Response, render_template, request, redirect, url_for
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 
 from wtforms import TextAreaField
 
-from utils import exec_user_code, complete_user_code, default_feature_code
+from utils import default_feature_code, model_param_lookup, get_data, construct_parser, encode_target
+from constants import NO_OF_ROWS_TO_SHOW, TRACEBACK_LIMIT, DATASETS, DATA_ERRORS, TRAINING_ERRORS
 
-from data import DataLoader, DataLoadingError
-from features import FeatureParser
+from data import DataLoadingError
 from models import TFModel
 
 
@@ -20,49 +19,20 @@ def create_app():
     return application
 
 
-def get_data(url):
-    data_loader = DataLoader(local_data_dir="./data")
-    return data_loader.load_data(data_path=url)
-
-
-def parse_feature_code(code_raw_string):
-
-    complete_code = complete_user_code(user_code=code_raw_string)
-    module_with_user_code = exec_user_code(code=complete_code)
-    feature_list = getattr(module_with_user_code, "features")
-
-    return FeatureParser(features=feature_list)
-
-
 # INPUT FORM FOR FEATURE TRANSFORMATION CODE
 class CodeInputForm(FlaskForm):
     code = TextAreaField("Put your feature transformation code in the text box below:")
 
 
-# CONSTANTS AND GLOBALS
-BASE_DATA_URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/"
-NO_OF_ROWS_TO_SHOW = 5
-TRACEBACK_LIMIT = 2
-
-DATASETS = {
-    "RedWineQuality": {"URL": BASE_DATA_URL+"wine-quality/winequality-red.csv",
-                       "target": "quality"},
-    "WhiteWineQuality": {"URL": BASE_DATA_URL+"wine-quality/winequality-white.csv",
-                         "target": "quality"},
-    "BreastCancerWisconsinDataset": {"URL":BASE_DATA_URL+"breast-cancer-wisconsin/breast-cancer-wisconsin.data",
-                                     "target": 10},
-    "ErrorDataset": {"URL": BASE_DATA_URL+"this-is-not-a-dataset.fsv",
-                     "target": "there_is_no_target"}
-}
-
-# POINTER TO A LOADED PANDAS DATAFRAME OF DATA TO PLAY WITH
+# LOADED DATA CONTAINER
 loaded_data = None
 loaded_data_name = None
+data_with_model_predictions = None
 
 
 # INIT APP
 app = create_app()
-app.config['SECRET_KEY'] = "any secret string"
+app.config['SECRET_KEY'] = "ThisIsSuperSecret"
 
 
 @app.route(rule="/", methods=["GET", "POST"])
@@ -95,19 +65,20 @@ def features():
             loaded_data = get_data(url=DATASETS[loaded_data_name]["URL"])
             raw_data = loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
 
-            parser = parse_feature_code(code_raw_string=code_raw_string)
+            parser = construct_parser(code_raw_string=code_raw_string)
             parsed_data_df = parser.parse_to_df(data=loaded_data)
-            transformed_features = parsed_data_df.head(NO_OF_ROWS_TO_SHOW).to_json()
+
+            feature_rows = parsed_data_df.head(NO_OF_ROWS_TO_SHOW).to_json()
 
             return render_template("feature_transform.html",
                                    selected_dataset=loaded_data_name,
                                    form=form,
                                    datasets=DATASETS,
                                    raw_data=raw_data,
-                                   features=transformed_features)
+                                   features=feature_rows)
 
-        except (NameError, SyntaxError, AttributeError, KeyError, ValueError) as execution_error:
-            transform_error = {"error": execution_error,
+        except DATA_ERRORS as error:
+            transform_error = {"error": error,
                                "traceback": traceback.format_exc(limit=TRACEBACK_LIMIT)}
 
             return render_template("feature_transform.html",
@@ -139,6 +110,7 @@ def training():
 
     global loaded_data
     global loaded_data_name
+    global data_with_model_predictions
 
     form = CodeInputForm()
 
@@ -151,52 +123,41 @@ def training():
         loaded_data = get_data(url=DATASETS[loaded_data_name]["URL"])
 
         try:
-            parser = parse_feature_code(code_raw_string=code_raw_string)
+            parser = construct_parser(code_raw_string=code_raw_string)
             parsed_data_df = parser.parse_to_df(loaded_data)
 
             # ATTACH TARGET COLUMN TO TRANSFORMED FEATURES
             target_name = DATASETS[loaded_data_name]["target"]
 
-            features_with_target = parsed_data_df
+            encoded_target, n_classes = encode_target(raw_target=loaded_data[target_name])
+            parsed_data_df[target_name] = encoded_target
 
-            prelim_target = loaded_data[target_name].astype(int)
-            unique_target_values = prelim_target.unique()
-            n_classes = len(unique_target_values)
-
-            target_value_lookup = dict()
-
-            for i, value in enumerate(sorted(unique_target_values)):
-                target_value_lookup[value] = i
-
-            features_with_target[target_name] = prelim_target
-
-            for i, value in enumerate(prelim_target):
-                prelim_target[i] = target_value_lookup[value]
-
-            features_with_target[target_name] = prelim_target
-
-            model_params = {"hidden_units": [3, 5, 3],
-                            "n_classes": n_classes}
+            model_params = model_param_lookup[model_class]
+            model_params["n_classes"] = n_classes
 
             model = TFModel(tf_estimator_class=model_class,
                             model_parameters=model_params,
                             feature_parser=parser,
                             model_export_directory="./model_export")
 
-            model.train(features=features_with_target,
-                        target=target_name,
-                        num_steps=100)
+            model_eval, data_with_model_predictions = model.train(features=parsed_data_df,
+                                                                  target=target_name,
+                                                                  num_steps=100)
 
             return render_template("model_training.html",
                                    form=form,
                                    datasets=DATASETS,
-                                   success=True)
-        except ValueError as error:
-            print(error)
+                                   model_eval=model_eval,
+                                   model_class=model_class,
+                                   loaded_data_name=loaded_data_name)
+
+        except TRAINING_ERRORS as error:
+            training_error = {"error": error,
+                              "traceback": traceback.format_exc(limit=TRACEBACK_LIMIT)}
             return render_template("model_training.html",
                                    form=form,
                                    datasets=DATASETS,
-                                   success=False)
+                                   training_error=training_error)
 
     else:
         form.code.data = default_feature_code
@@ -204,6 +165,34 @@ def training():
         return render_template("model_training.html",
                                form=form,
                                datasets=DATASETS)
+
+
+@app.route(rule="/mlhub-model-predictions", methods=["GET"])
+def get_predictions():
+
+    if data_with_model_predictions is not None:
+
+        def prediction_generator():
+
+            row_number = 0
+
+            for _, row_entries in data_with_model_predictions.iterrows():
+                if row_number == 0:
+                    yield ','.join(data_with_model_predictions.columns.values) + '\n'
+                else:
+                    yield ','.join(row_entries.values.astype(str)) + '\n'
+
+                row_number += 1
+
+        return Response(prediction_generator(),
+                        mimetype='text/csv')
+    else:
+        raise ValueError("No model prediction data available. Train a model first.")
+
+
+@app.route(rule="/docs", methods=["GET", "POST"])
+def docs():
+    return render_template("documentation.html")
 
 
 if __name__ == "__main__":

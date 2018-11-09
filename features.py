@@ -24,6 +24,13 @@ class FeatureDef:
             else:
                 raise ValueError("Unknown feature kind %s" % (self.kind, ))
 
+        @staticmethod
+        def _ensure_numpy(feature_values):
+            if not isinstance(feature_values, np.ndarray):
+                return np.array(feature_values)
+            else:
+                return feature_values
+
         def parse(self, data):
 
             if isinstance(data, pd.DataFrame):
@@ -32,6 +39,10 @@ class FeatureDef:
                     data_dict = data
             else:
                 raise ValueError("Variable data can be either a Pandas Dataframe or a dictionary!")
+
+            for feature_name, feature_values in data_dict.items():
+                data_dict[feature_name] = FeatureDef._ensure_numpy(feature_values)
+
             try:
                 feature_values = data_dict[self.name]
             except KeyError:

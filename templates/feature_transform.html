@@ -38,22 +38,24 @@
 {% endblock %}
 
 {% block content %}
-    <h1 align="center" class="jumbotron"> Feature transformation explorer</h1>
+    <h2 align="center">Feature transformations</h2>
     {% if selected_dataset %}
-        <h3 align="center"> You are exploring the dataset "{{ selected_dataset }}"</h3>
+        <h5 align="center"> You are exploring the dataset "{{ selected_dataset }}"</h5>
+    {% else %}
+        <h5 align="center">No dataset has currently been selected.</h5>
     {% endif %}
     </br>
     <div class="container">
         <form action="{{ url_for('features') }}" method="POST">
             <div class="form-group">
-                <label for="select_data">Please select a dataset: </label>
-                <select class="form-control" id="select_data" name="select_data">
+                <label for="select_data">Select a dataset: </label>
+                <select class="form-control-inline" id="select_data" name="select_data">
                     {% for dataset_name, dataset_link in datasets.items() %}
                         <option value="{{ dataset_name }}">{{ dataset_name }}</option>
                     {% endfor %}
                 </select>
                 </br>
-                {{ form.code(cols="62", rows="25", id="large") }}
+                {{ form.code(cols="62", rows="25", id="code-box-features") }}
                 </br>
                 <input type="submit" value="Submit code" class="btn btn-primary"/>
             </div>
@@ -89,11 +91,6 @@
                     </p>
                 {% else %}
                     <h3 align="center">No transformed features to display</h3>
-                    <p>
-                        This section will contain preview of your transformed features, once
-                        you have submitted valid feature transform code, using the 'Submit'
-                        button on the left.
-                    </p>
                 {% endif %}
             {% elif data_loading_error %}
             <p>
@@ -109,7 +106,15 @@
                 </p>
             </p>
             {% else %}
-            <h3 align="center">No dataset has currently been selected.</h3>
+            <p>
+                This section will contain preview of your raw data and transformed features, once
+                you have submitted valid feature transform code, using the 'Submit' button on the
+                bottom left.
+            </p>
+            <p>
+                Possible errors that occur during raw data ingestion or feature transformation will
+                also be displayed, along with a stack trace.
+            </p>
             {% endif %}
         </div>
     </div>

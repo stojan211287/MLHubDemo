@@ -5,8 +5,6 @@ import pandas as pd
 import urllib.request
 from urllib.error import URLError
 
-from utils import ensure_local_dir
-
 
 class DataLoadingError(Exception):
     pass
@@ -29,7 +27,14 @@ class DataLoader:
     def __init__(self, local_data_dir):
 
         self.local_data_dir = local_data_dir
-        ensure_local_dir(self.local_data_dir)
+        DataLoader._ensure_local_dir(self.local_data_dir)
+
+    @staticmethod
+    def _ensure_local_dir(dir_path):
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        else:
+            pass
 
     def load_data(self, data_path):
 
