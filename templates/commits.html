@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block startup_js %}
+<script>
+
+    function showFeatureDetails(featureHash) {
+
+          var descriptionDivName = "featureDescription"+featureHash;
+          var detailsParagraphName = "featureDetails"+featureHash;
+
+          var detailsParagraph = document.getElementById(detailsParagraphName).innerHTML;
+
+          var noDataMessage = "Feature definitions hidden";
+
+          var x = document.getElementById(descriptionDivName);
+
+          if (x.innerHTML === "" || x.innerHTML === noDataMessage) {
+
+            x.innerHTML = detailsParagraph;
+          } else {
+            x.innerHTML = "";
+          }
+        }
+
+</script>
+{% endblock %}
+
+
+{% block content %}
+
+{% if user.committed_features %}
+    <div class="media-list">
+        {% for feature_hash, user_made_feature in user.committed_features.items() %}
+        <div class="block">
+            <div>
+                <h5>Feature spec {{ feature_hash }} - applied to {{ user_made_feature["raw_data"] }}</h5>
+                <div id="featureDescription{{ feature_hash }}" style="font-size:15px;"></div>
+                 <p id="featureDetails{{ feature_hash }}" hidden>
+                 {% for user_feature in user_made_feature["code"] %}
+                     {{ user_feature }};
+                     </br>
+                 {% endfor %}
+                </p>
+                <button onclick="showFeatureDetails('{{ feature_hash }}')">Show features</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="media-list">
+        <div class="block">
+            <div>
+                <h3>No features committed yet</h3>
+                <p>Test out and then commit feature code in the 'Features' tab.</p>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+{% endblock %}

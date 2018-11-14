@@ -1,15 +1,11 @@
-import traceback
-
-from flask import Flask, Response, render_template, request, redirect, url_for
+from flask import Flask, Response, render_template, request
 from flask_bootstrap import Bootstrap
-from flask_wtf import FlaskForm
 
-from wtforms import TextAreaField
+from utils import default_feature_code, model_param_lookup, construct_parser, encode_target, error_with_traceback
+from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, TRAINING_ERRORS
 
-from utils import default_feature_code, model_param_lookup, get_data, construct_parser, encode_target
-from constants import NO_OF_ROWS_TO_SHOW, TRACEBACK_LIMIT, DATASETS, DATA_ERRORS, TRAINING_ERRORS
-
-from data import DataLoadingError
+from user import User
+from data import DataLoadingError, DataLoader, MalformedDataUrl
 from models import TFModel
 
 
@@ -19,16 +15,14 @@ def create_app():
     return application
 
 
-# INPUT FORM FOR FEATURE TRANSFORMATION CODE
-class CodeInputForm(FlaskForm):
-    code = TextAreaField("Put your feature transformation code in the text box below:")
-
-
-# LOADED DATA CONTAINER
-loaded_data = None
-loaded_data_name = None
+# TODO: GET RID OF THIS
 data_with_model_predictions = None
 
+# MAKE USER
+user = User(datasets=DATASETS)
+
+# MAKE DATA LOADER
+data_loader = DataLoader(local_data_dir="./data")
 
 # INIT APP
 app = create_app()
@@ -37,99 +31,115 @@ app.config['SECRET_KEY'] = "ThisIsSuperSecret"
 
 @app.route(rule="/", methods=["GET", "POST"])
 def index():
+    return render_template("index.html")
+
+
+@app.route(rule="/datasets", methods=["GET", "POST"])
+def datasets():
+
+    backend_response = {"data_loading_error": None}
 
     if request.method == "POST":
-        selected_dataset = request.form.get("select_data")
-        return redirect(url_for("features", dataset=selected_dataset))
+
+        try:
+            data_url = request.form.get("data_url")
+
+            new_dataset_name = data_url.split("/")[-1].split(".")[0]
+
+            user.loaded_data = data_loader.load_data(data_path=data_url)
+            user.loaded_data_name = new_dataset_name
+
+            user.add_dataset(url=data_url,
+                             dataset_name=new_dataset_name)
+
+        except MalformedDataUrl as error:
+            backend_response["data_loading_error"] = {"error_message": error}
+
+        return render_template("datasets.html",
+                               user=user,
+                               backend_response=backend_response)
     else:
-        return render_template("index.html",
-                               datasets=DATASETS)
+        return render_template("datasets.html",
+                               user=user)
 
 
 @app.route(rule="/features", methods=["GET", "POST"])
 def features():
 
-    global loaded_data
-    global loaded_data_name
-
-    form = CodeInputForm()
+    backend_response = {"raw_data_preview": None,
+                        "feature_preview": None,
+                        "transform_error": None,
+                        "data_loading_error": None}
 
     if request.method == "POST":
 
-        code_raw_string = form.code.data
-        loaded_data_name = request.form.get("select_data")
+        user.feature_code = request.form.get("code_box")
+        user.loaded_data_name = request.form.get("select_data")
 
-        raw_data = None
+        commit_was_pressed = request.form.get("commit_button")
 
         try:
-            loaded_data = get_data(url=DATASETS[loaded_data_name]["URL"])
-            raw_data = loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
+            user.loaded_data = data_loader.load_data(data_path=user.available_datasets[user.loaded_data_name]["URL"])
+            parser, completed_code = construct_parser(code_raw_string=user.feature_code)
+            used_feature_generators = parser.get_all_generators()
 
-            parser = construct_parser(code_raw_string=code_raw_string)
-            parsed_data_df = parser.parse_to_df(data=loaded_data)
+            try:
+                raw_data_preview = user.loaded_data[used_feature_generators].head(NO_OF_ROWS_TO_SHOW).to_json()
+                backend_response["raw_data_preview"] = raw_data_preview
 
-            feature_rows = parsed_data_df.head(NO_OF_ROWS_TO_SHOW).to_json()
+            # THIS IS FOR WHEN THE used_feature_generators ARE NOT IN THE INDEX OF THE RAW DATAFRAME
+            except KeyError as error:
+                backend_response["data_loading_error"] = error_with_traceback(error=error)
 
-            return render_template("feature_transform.html",
-                                   selected_dataset=loaded_data_name,
-                                   form=form,
-                                   datasets=DATASETS,
-                                   raw_data=raw_data,
-                                   features=feature_rows)
+            parsed_df = parser.parse_to_df(data=user.loaded_data)
+            feature_preview = parsed_df.head(NO_OF_ROWS_TO_SHOW).to_json()
+            backend_response["feature_preview"] = feature_preview
+
+            if commit_was_pressed:
+                user.commit_features(feature_preview=feature_preview)
 
         except DATA_ERRORS as error:
-            transform_error = {"error": error,
-                               "traceback": traceback.format_exc(limit=TRACEBACK_LIMIT)}
+            backend_response["transform_error"] = error_with_traceback(error=error)
 
-            return render_template("feature_transform.html",
-                                   form=form,
-                                   selected_dataset=loaded_data_name,
-                                   datasets=DATASETS,
-                                   raw_data=raw_data,
-                                   transform_error=transform_error)
         except DataLoadingError as data_error:
-            data_loading_error = {"error": data_error,
-                                  "traceback": traceback.format_exc(limit=TRACEBACK_LIMIT)}
-
-            return render_template("feature_transform.html",
-                                   form=form,
-                                   datasets=DATASETS,
-                                   selected_dataset=loaded_data_name,
-                                   raw_data=raw_data,
-                                   data_loading_error=data_loading_error)
+            backend_response["data_loading_error"] = error_with_traceback(error=data_error)
     else:
-        form.code.data = default_feature_code
+        user.feature_code = default_feature_code
 
-        return render_template("feature_transform.html",
-                               form=form,
-                               datasets=DATASETS)
+        if request.args.get("dataset"):
+            user.loaded_data_name = request.args.get("dataset")
+
+    return render_template("feature_transform.html",
+                           user=user,
+                           backend_response=backend_response)
 
 
 @app.route(rule="/training", methods=["GET", "POST"])
 def training():
 
-    global loaded_data
-    global loaded_data_name
     global data_with_model_predictions
 
-    form = CodeInputForm()
+    backend_response = {"model_class": None,
+                        "model_eval": None,
+                        "model_docs": None,
+                        "training_error": None}
 
     if request.method == "POST":
 
-        code_raw_string = form.code.data
-
+        user.feature_code = request.form.get("code_box")
+        user.loaded_data_name = request.form.get("select_data")
         model_class = request.form.get("select_model")
-        loaded_data_name = request.form.get("select_data")
-        loaded_data = get_data(url=DATASETS[loaded_data_name]["URL"])
 
         try:
-            parser = construct_parser(code_raw_string=code_raw_string)
-            parsed_data_df = parser.parse_to_df(loaded_data)
+            user.loaded_data = data_loader.load_data(data_path=user.available_datasets[user.loaded_data_name]["URL"])
+
+            parser, completed_code = construct_parser(code_raw_string=user.feature_code)
+            parsed_data_df = parser.parse_to_df(user.loaded_data)
 
             # ATTACH TARGET COLUMN TO TRANSFORMED FEATURES
-            target_name = DATASETS[loaded_data_name]["target"]
+            target_name = user.available_datasets[user.loaded_data_name]["target"]
 
-            encoded_target, n_classes = encode_target(raw_target=loaded_data[target_name])
+            encoded_target, n_classes = encode_target(raw_target=user.loaded_data[target_name])
             parsed_data_df[target_name] = encoded_target
 
             model_params = model_param_lookup[model_class]
@@ -144,27 +154,21 @@ def training():
                                                                   target=target_name,
                                                                   num_steps=100)
 
-            return render_template("model_training.html",
-                                   form=form,
-                                   datasets=DATASETS,
-                                   model_eval=model_eval,
-                                   model_class=model_class,
-                                   loaded_data_name=loaded_data_name)
+            # TODO: TAKE A LOOK AT THIS
+            model_docs = model.model_instance.__init__.__doc__.split("\n")
+
+            backend_response["model_class"] = model_class
+            backend_response["model_eval"] = model_eval
+            backend_response["model_docs"] = model_docs
 
         except TRAINING_ERRORS as error:
-            training_error = {"error": error,
-                              "traceback": traceback.format_exc(limit=TRACEBACK_LIMIT)}
-            return render_template("model_training.html",
-                                   form=form,
-                                   datasets=DATASETS,
-                                   training_error=training_error)
-
+            backend_response["training_error"] = error_with_traceback(error=error)
     else:
-        form.code.data = default_feature_code
+        user.feature_code = default_feature_code
 
-        return render_template("model_training.html",
-                               form=form,
-                               datasets=DATASETS)
+    return render_template("model_training.html",
+                           user=user,
+                           backend_response=backend_response)
 
 
 @app.route(rule="/mlhub-model-predictions", methods=["GET"])
@@ -193,6 +197,12 @@ def get_predictions():
 @app.route(rule="/docs", methods=["GET", "POST"])
 def docs():
     return render_template("documentation.html")
+
+
+@app.route(rule="/commits", methods=["GET"])
+def commits():
+    return render_template("commits.html",
+                           user=user)
 
 
 if __name__ == "__main__":

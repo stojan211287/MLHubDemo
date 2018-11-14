@@ -25,81 +25,70 @@
 {% endblock %}
 
 {% block content %}
-<h2 align="center">Model training</h2>
-</br>
-<div class="container">
-    <form action="{{ url_for('training') }}" method="POST">
-        <div class="form-group">
-            <label for="select_data">Select a dataset: </label>
-            <select class="form-control-inline" id="select_data" name="select_data">
-                {% for dataset_name, dataset_link in datasets.items() %}
-                    <option value="{{ dataset_name }}">{{ dataset_name }}</option>
-                {% endfor %}
-            </select>
-            </br>
-            <label for="select_data">Select a model class: </label>
-            <select class="form-control-inline" id="select_model" name="select_model">
-                <option value="DNNClassifier">Neural Network Classfier</option>
-                <option value="LinearClassifier">Logistic Regression Classfier</option>
-                <option value="BoostedTreesClassifier">Boosted Tree Classifier</option>
-            </select>
-            </br>
-            {{ form.code(cols="62", rows="25", id="code-box-models") }}
-            </br>
-            <input type="submit" value="Submit code" class="btn btn-primary"/>
+    <h1 align="center">Model training</h1>
+    </br>
+    <h4 align="center">Here, you can assess performance of a few classifier, using custom features and datasets</h4>
+    <div class="container">
+        <div align="center" class="form-group">
+            <form action="{{ url_for('training') }}" method="POST">
+                <label for="select_data_models">Select a dataset: </label>
+                <select class="form-control-inline" id="select_data_models" name="select_data">
+                    {% for dataset_name, dataset_link in user.available_datasets.items() %}
+                        <option value="{{ dataset_name }}">{{ dataset_name }}</option>
+                    {% endfor %}
+                </select>
+                </br>
+                <label for="select_model">Select a model class: </label>
+                <select class="form-control-inline" id="select_model" name="select_model">
+                    <option value="DNNClassifier">Neural Network Classfier</option>
+                    <option value="LinearClassifier">Logistic Regression Classfier</option>
+                    <option value="BoostedTreesClassifier">Boosted Tree Classifier</option>
+                </select>
+                </br>
+                </br>
+                <textarea cols="62" rows="25" id="code-box-models" name="code_box">{{ user.feature_code }}</textarea>
+                </br>
+                <input type="submit" value="Train model" class="btn btn-primary"/>
+            </form>
         </div>
-    </form>
-    {% if model_eval %}
-    <div>
-        <h3 align="center">
-            Model training successful!
-        </h3>
-        <p>
-            You have successfully trained a Tensorflow Estimator
-            <strong>
-               {{ model_class }}
-            </strong>
-            model on the
-            dataset called
-            <strong>
-            {{ loaded_data_name }}
-            </strong>.
-        </p>
-        <h3 align="center">{{ model_class }} performance metrics </br> on {{ loaded_data_name }}</h3>
-        </br>
-        <div><table id="prediction_table" class="table"></table></div>
-        <script type=text/javascript>
-           document.getElementById("prediction_table")
-                   .innerHTML = make_metrics_table_from_json({{ model_eval | safe }});
-        </script>
-        <form class="form-group" action="{{ url_for('get_predictions') }}" method="GET">
-            <input type="submit" value="Download model predictions" class="btn btn-primary">
-        </form>
+        <div align="center" class="form-group">
+            {% if backend_response["model_class"] %}
+                <h3 align="center">Model training successful!</h3>
+                {% set model_class = backend_response["model_class"] %}
+                <p>
+                    You have successfully trained a Tensorflow Estimator
+                    <strong>
+                       {{ backend_response["model_class"] }}
+                    </strong> model on the dataset called
+                    <strong>
+                    {{ user.loaded_data_name }}
+                    </strong>.
+                </p>
+                <h3 align="center">{{ model_class }} performance metrics on {{ user.loaded_data_name }}</h3>
+                </br>
+                <div id="prediction_eval_table"><table id="prediction_table" class="table"></table></div>
+                {% set eval = backend_response["model_eval"] %}
+                <script type=text/javascript>
+                   document.getElementById("prediction_table")
+                   .innerHTML = make_metrics_table_from_json({{ eval | safe }});
+                </script>
+                <form class="form-group" action="{{ url_for('get_predictions') }}" method="GET">
+                    <input type="submit" value="Download model predictions" class="btn btn-primary">
+                </form>
+            {% elif backend_response["training_error"] %}
+                <h3 align="center">Model training unsuccessful!</h3>
+                {% set error = backend_response["training_error"] %}
+                <p><strong>{{ error["error"] }}</strong></p>
+                <p>{{ error["traceback"] }}</p>
+            {% else %}
+               <p>
+                   This section will contain trained model performance stats, as well as a button that can be used to
+                   download your model's predictions on the test set.
+                   </br>
+                   </br>
+                   The test set is, by default, generated by randomly choosing 10% of the whole dataset provided.
+               </p>
+            {% endif %}
+        </div>
     </div>
-    {% elif training_error %}
-    <div>
-        <h3 align="center">
-            Model training unsuccessful!
-        </h3>
-        <p>
-            <strong>
-             {{ training_error['error'] }}
-            </strong>
-        </p>
-        <p>
-            {{ training_error['traceback'] }}
-        </p>
-    </div>
-    {% else %}
-    <div>
-       <p>
-           This section will contain trained model performance stats, as well as a button that can be used to
-           download your model's predictions on the test set.
-           </br>
-           </br>
-           The test set is, by default, generated by randomly choosing 10% of the whole dataset provided.
-       </p>
-    </div>
-    {% endif %}
-</div>
 {% endblock %}

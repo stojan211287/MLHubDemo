@@ -1,9 +1,11 @@
 import os
 import sys
 import types
+import traceback
 
 from data import DataLoader
 from features import FeatureParser
+from constants import TRACEBACK_LIMIT
 
 default_feature_code = \
 """FeatureDef(
@@ -61,6 +63,7 @@ def complete_user_code(user_code):
     import_statements = """from features import FeatureDef;import numpy as np;"""
 
     feature_def_elements = user_code.split(";")[:-1]  # ELIMINATE POSSIBLE STUFF AFTER THE LAST SEMICOLON
+
     feature_list_code = "features = ["+",".join(feature_def_elements)+"]"
 
     return import_statements+feature_list_code
@@ -91,6 +94,15 @@ def construct_parser(code_raw_string):
 
     complete_code = complete_user_code(user_code=code_raw_string)
     module_with_user_code = exec_user_code(code=complete_code)
+
     feature_list = getattr(module_with_user_code, "features")
 
-    return FeatureParser(features=feature_list)
+    if len(feature_list) == 0:
+        raise ValueError("Provided feature list is empty! Check your feature definition code.")
+    else:
+        return FeatureParser(features=feature_list), complete_code
+
+
+def error_with_traceback(error):
+    return {"error": error,
+            "traceback": traceback.format_exc(limit=TRACEBACK_LIMIT)}

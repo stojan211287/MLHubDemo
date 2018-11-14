@@ -1,17 +1,105 @@
- #code-box-features {
+#code-box-features {
+    font-size: 20px;
+}
+
+#code-box-models {
+    font-size: 20px;
+}
+
+#select_data_features {
+    min-width: 40%;
     font-size: 25px;
 }
 
- #code-box-models {
+#select_data_models {
+    min-width: 39%;
     font-size: 25px;
+}
+
+#select_model {
+    min-width: 35%;
+    font-size: 25px;
+}
+
+#preview_code {
+    min-width: 25%;
+    padding: 10px;
+    margin: 1rem 2rem 1rem 0;
+}
+
+#commit_code {
+    min-width: 25%;
+    padding: 10px;
+}
+
+#data_url_text_area {
+    font-size: 25px;
+    margin: 1rem 0 2rem 0rem;
+}
+
+#download_data {
+    margin: 0 0 3rem 0;
+}
+
+#prediction_eval_table {
+    margin: 0 0 0 3rem;
+}
+
+.navbar {
+    font-size: 20px;
+}
+
+.list-group-item{
+    font-size: 20px;
 }
 
 .container {
     display: flex;
     flex-direction: row;
-    justify-content: space-evenly;
+    align-content: center;
+    justify-content : space-around;
+    padding: 10px;
+    min-width: 100%;
+    margin: 5rem 0 0 0;
+}
+
+.container > div {
+    flex: 1;
+}
+
+.container .list-group {
+    min-width: 35%;
+    margin: 3rem 0 0 5rem ;
+}
+
+#data-loading-message {
+    margin: 10rem 0 0 10rem;
+}
+
+.media-list {
+    display: flex;
+    flex-direction: column;
     align-content: space-around;
     padding: 10px;
+    width: 100%;
+}
+
+.block {
+    display: flex;
+    align-items: flex-start;
+    background: #ccc;
+    padding: 1rem;
+    width: 100%;
+    margin: 0 0 1rem 0;
+}
+
+.block > div {
+    flex: 1;
+}
+
+.block h2 {
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
 }
 
 .table td {
@@ -34,3 +122,17 @@ p {
     padding: 10px;
     font-size: 20px;
 }
+
+label {
+    font-size: 25px;
+}
+
+body {
+  font-weight: 300;
+  font-family: 'Roboto', sans-serif;
+  font-size: 85%;
+  line-height: 1.4;
+  margin: 0;
+  padding: 1rem;
+}
+

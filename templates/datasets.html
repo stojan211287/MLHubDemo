@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 align="center">Dataset loading</h1>
+    </br>
+    <h4 align="center">
+        Here, you can choose one of the already available datasets, or specify a
+        URL of your own, to attempt download of a custom one.
+    </h4>
+    <div class="container">
+        <div class="form-group">
+            <p align="center">
+            We suggest you start with
+                <a href="https://archive.ics.uci.edu/ml/index.php"> https://archive.ics.uci.edu/ml/index.php</a>
+                and explore the datasets available.
+
+            Then, type the URL of the dataset you want to download below.
+            </p>
+            <form action="{{ url_for('datasets') }}" method="POST">
+                {% set url = "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data" %}
+                <textarea cols="75" rows="1" id="data_url_text_area" name="data_url">{{ url }}</textarea>
+
+                </br>
+                <input type="submit" class="btn btn-primary" value="Download" id="download_data">
+            </form>
+        </div>
+
+        <div class="list-group">
+            <h3 align="center">Available datasets</h3>
+            </br>
+            {% for dataset_name, _ in user.available_datasets.items() %}
+                {% set button_href = url_for('features', dataset=dataset_name) %}
+                <a class="list-group-item list-group-item-action"
+                   href="{{ button_href }}">
+                    {{ dataset_name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% if backend_response %}
+    <div id="data-loading-message">
+        {% if backend_response["data_loading_error"] %}
+            <h3 align="center">An error occurred when attempting to fetch a remote dataset</h3>
+            {% set error_msg = backend_response["data_loading_error"]["error_message"] %}
+            <p align="center"> The error was <strong>{{ error_msg }}</strong></p>
+        {% else %}
+            <h3 align="center">Dataset {{ user.loaded_data_name }} downloaded successfully.</h3>
+            <p align="center">It has been loaded into memory and is available for manipulation. Also,
+                              it has been added to the 'Available datasets' list.</p>
+
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}

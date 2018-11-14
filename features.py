@@ -17,15 +17,19 @@ class FeatureDef:
             self.wrapper = namedtuple("Feature", ["name", "kind", "values"])
 
         def _ensure_type(self, feature_values):
+
             if self.kind == "numeric":
                 return np.array(feature_values, dtype=np.float32)
+
             elif self.kind == "categorical":
                 return np.array(feature_values, dtype=np.unicode_)
+
             else:
                 raise ValueError("Unknown feature kind %s" % (self.kind, ))
 
         @staticmethod
         def _ensure_numpy(feature_values):
+
             if not isinstance(feature_values, np.ndarray):
                 return np.array(feature_values)
             else:
@@ -46,13 +50,16 @@ class FeatureDef:
             try:
                 feature_values = data_dict[self.name]
             except KeyError:
+
                 if self.recipe is None:
                     raise ValueError("You most provide a recipe for feature transformation!")
+
                 else:
                     feature_generators = itemgetter(*self.recipe["generators"])(data_dict)
 
                     if isinstance(feature_generators, tuple):
                         feature_values = self.recipe["function"](*feature_generators)
+
                     else:
                         feature_values = self.recipe["function"](feature_generators)
 
@@ -69,6 +76,7 @@ class FeatureParser:
                 try:
                     assert isinstance(feature, FeatureDef)
                     self.features.append(feature)
+
                 except AssertionError:
                     raise ValueError("You most provide a list of FeatureDefs to FeatureParser!")
 
@@ -111,6 +119,19 @@ class FeatureParser:
                     raise ValueError("Feature kinds can only be 'numeric' or 'categorical', not %s" % (feature.kind, ))
 
             return feature_columns
+
+        def get_all_generators(self):
+
+            generator_list = set()
+
+            for feature in self.features:
+                try:
+                    generator_list |= set(feature.recipe["generators"])
+
+                except (KeyError, TypeError):
+                    generator_list |= set(feature.name)
+
+            return list(generator_list)
 
 
 if __name__ == "__main__":

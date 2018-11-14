@@ -22,6 +22,10 @@ class DatasetFormatNotSupported(DataLoadingError):
     pass
 
 
+class MalformedDataUrl(DataLoadingError):
+    pass
+
+
 class DataLoader:
 
     def __init__(self, local_data_dir):
@@ -36,32 +40,32 @@ class DataLoader:
         else:
             pass
 
-    def load_data(self, data_path):
-
-        try:
-            assert isinstance(data_path, str)
-
-        except AssertionError:
-            raise ValueError("data_path must be a string URL or absolute path!")
+    def load_data(self, data_path, header=None):
 
         if data_path.startswith("http"):
-            downloaded_file = self._download_and_cache_data(data_url=data_path)
 
-            if downloaded_file.split(".")[-1] == "data":
-                return pd.read_csv(downloaded_file,
-                                   header=None,
-                                   sep=",")
-            elif downloaded_file.split(".")[-1] == "csv":
+            downloaded_file = self._download_and_cache_data(data_url=data_path)
+            local_file_suffix = downloaded_file.split(".")[-1]
+
+            if local_file_suffix.startswith("data"):
+
+                if header is not None:
+                    return pd.read_csv(downloaded_file,
+                                       header=0,
+                                       sep=",")
+                else:
+                    return pd.read_csv(downloaded_file,
+                                       header=0,
+                                       sep=",")
+
+            elif local_file_suffix.startswith("csv"):
                 return pd.read_csv(downloaded_file,
                                    header=0,
                                    sep=";")
             else:
                 raise DatasetFormatNotSupported
         else:
-            try:
-                return pd.read_csv(data_path)
-            except IOError:
-                raise DataNotFoundLocally
+            raise MalformedDataUrl("%s is not a valid URL!" % (data_path, ))
 
     def _download_and_cache_data(self, data_url):
 
@@ -83,7 +87,6 @@ class DataLoader:
             except URLError:
                 raise DataNotFoundRemotly("File %s not found at %s" %
                                           (save_file_name, data_url))
-
         return save_file_name
 
 

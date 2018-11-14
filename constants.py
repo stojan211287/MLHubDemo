@@ -1,5 +1,5 @@
 BASE_DATA_URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/"
-NO_OF_ROWS_TO_SHOW = 5
+NO_OF_ROWS_TO_SHOW = 15
 TRACEBACK_LIMIT = 2
 
 DATASETS = {
