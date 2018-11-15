@@ -37,7 +37,8 @@ def index():
 @app.route(rule="/datasets", methods=["GET", "POST"])
 def datasets():
 
-    backend_response = {"data_loading_error": None}
+    backend_response = {"data_loading_error": None,
+                        "loaded_data_features": None}
 
     if request.method == "POST":
 
@@ -51,6 +52,8 @@ def datasets():
 
             user.add_dataset(url=data_url,
                              dataset_name=new_dataset_name)
+
+            backend_response["loaded_data_features"] = user.loaded_data.columns
 
         except (MalformedDataUrl, DataNotFoundRemotly) as error:
             backend_response["data_loading_error"] = {"error_message": error}
@@ -202,6 +205,12 @@ def docs():
 @app.route(rule="/commits", methods=["GET"])
 def commits():
     return render_template("commits.html",
+                           user=user)
+
+
+@app.route(rule="/deployment", methods=["GET"])
+def deployment():
+    return render_template("deployment.html",
                            user=user)
 
 

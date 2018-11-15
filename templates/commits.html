@@ -27,7 +27,7 @@
 
 
 {% block content %}
-
+<h1 align="center"> Feature transformation commits</h1>
 {% if user.committed_features %}
     <div class="media-list">
         {% for feature_hash, user_made_feature in user.committed_features.items() %}
@@ -56,6 +56,14 @@
         </div>
     </div>
 {% endif %}
-
+<h1 align="center"> Model commits</h1>
+ <div class="media-list">
+        <div class="block">
+            <div>
+                <h3>No models committed yet</h3>
+                <p>Test out and then commit feature code in the 'Models' tab.</p>
+            </div>
+        </div>
+ </div>
 
 {% endblock %}

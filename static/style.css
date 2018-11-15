@@ -49,6 +49,11 @@
     font-size: 20px;
 }
 
+.list-group {
+    max-width: 50%;
+    margin: 5rem 0 0 0;
+}
+
 .list-group-item{
     font-size: 20px;
 }

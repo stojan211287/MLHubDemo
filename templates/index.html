@@ -1,33 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 align="center">Welcome to MLHub</h1>
-<div class="container">
-    <div>
-        <p>
-        This is a ripoff of FloydHub that has waay fewer features. To start, select
-        one of the playgrounds from the navigation bar or the menu below.
-        </p>
+    <h1 align="center">Welcome to MLHub</h1>
+    </br>
+    <h4 align="center">This is a ripoff of FloydHub that has waay fewer features. To start, select
+            one of the playgrounds from the navigation bar or the menu to the right.</h4>
+
+    <div align="center">
+        <div class="list-group">
+            <a href="{{ url_for('datasets') }}"
+               class="list-group-item list-group-item-action active">
+                Dataset download and selection
+            </a>
+            </br>
+            <a href="{{ url_for('features') }}"
+               class="list-group-item list-group-item-action active">
+                Feature transformations design
+            </a>
+            </br>
+            <a href="{{ url_for('training') }}"
+               class="list-group-item list-group-item-action active">
+                Model training and evaluation
+            </a>
+            </br>
+            <a href="{{ url_for('deployment') }}"
+               class="list-group-item list-group-item-action active">
+                Model deployment testing
+            </a>
+            </br>
+            <a href="{{ url_for('docs') }}"
+               class="list-group-item list-group-item-action active">
+                Documentation and examples
+            </a>
+        </div>
     </div>
-</div>
-
-    <div class="list-group">
-        <a href="{{ url_for('features') }}"
-           class="list-group-item list-group-item-action active">
-            Data loading and feature transformations
-        </a>
-        </br>
-        <a href="{{ url_for('training') }}"
-           class="list-group-item list-group-item-action active">
-            Model training and evaluation
-        </a>
-        </br>
-        <a href="{{ url_for('features') }}"
-           class="list-group-item list-group-item-action active">
-            Model deployment testing
-        </a>
-    </div>
-
-
 
 {% endblock %}

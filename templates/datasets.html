@@ -19,12 +19,10 @@
             <form action="{{ url_for('datasets') }}" method="POST">
                 {% set url = "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data" %}
                 <textarea cols="75" rows="1" id="data_url_text_area" name="data_url">{{ url }}</textarea>
-
                 </br>
                 <input type="submit" class="btn btn-primary" value="Download" id="download_data">
             </form>
         </div>
-
         <div class="list-group">
             <h3 align="center">Available datasets</h3>
             </br>
@@ -47,6 +45,21 @@
             <h3 align="center">Dataset {{ user.loaded_data_name }} downloaded successfully.</h3>
             <p align="center">It has been loaded into memory and is available for manipulation. Also,
                               it has been added to the 'Available datasets' list.</p>
+
+            <p align="center"> The loaded dataset has the following features: </br></br>
+            {% set feature_list = backend_response["loaded_data_features"] %}
+            {% for feature_name in feature_list %}
+                {% if loop.index % 10 == 0 %}
+                    </br>
+                {% endif %}
+                {% if loop.index == loop.length %}
+                    {% set display_name = feature_name %}
+                {% else %}
+                    {% set display_name = feature_name+"," %}
+                {% endif %}
+                <strong>{{ display_name }}</strong>
+            {% endfor %}
+            </p>
 
         {% endif %}
     </div>
