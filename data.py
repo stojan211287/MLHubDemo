@@ -1,5 +1,6 @@
 import os
 import shutil
+import hashlib
 import pandas as pd
 
 import urllib.request
@@ -7,10 +8,6 @@ from urllib.error import URLError
 
 
 class DataLoadingError(Exception):
-    pass
-
-
-class DataNotFoundLocally(DataLoadingError):
     pass
 
 
@@ -70,8 +67,9 @@ class DataLoader:
     def _download_and_cache_data(self, data_url):
 
         dataset_name = data_url.split("/")[-1]
+        url_hash = hashlib.sha256(data_url.encode()).hexdigest()
 
-        save_file_name = os.path.join(self.local_data_dir, dataset_name)
+        save_file_name = os.path.join(self.local_data_dir, url_hash+"."+dataset_name)
 
         # CHECK IF DATA HAS ALREADY BEEN DOWNLOADED
         if os.path.exists(save_file_name):
@@ -86,7 +84,7 @@ class DataLoader:
 
             except URLError:
                 raise DataNotFoundRemotly("File %s not found at %s" %
-                                          (save_file_name, data_url))
+                                          (dataset_name, data_url))
         return save_file_name
 
 

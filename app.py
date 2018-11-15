@@ -5,7 +5,7 @@ from utils import default_feature_code, model_param_lookup, construct_parser, en
 from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, TRAINING_ERRORS
 
 from user import User
-from data import DataLoadingError, DataLoader, MalformedDataUrl
+from data import DataLoadingError, DataLoader, MalformedDataUrl, DataNotFoundRemotly
 from models import TFModel
 
 
@@ -52,7 +52,7 @@ def datasets():
             user.add_dataset(url=data_url,
                              dataset_name=new_dataset_name)
 
-        except MalformedDataUrl as error:
+        except (MalformedDataUrl, DataNotFoundRemotly) as error:
             backend_response["data_loading_error"] = {"error_message": error}
 
         return render_template("datasets.html",
