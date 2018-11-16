@@ -1,44 +1,5 @@
 {% extends "base.html" %}
 
-
-{% block startup_js %}
-    <script type="text/javascript">
-        function make_table_from_json(data_json) {
-
-            var first_feature_name = Object.keys(data_json)[0];
-            var no_of_data_points = Object.values(data_json[first_feature_name]).length;
-
-            var tableHeader = "<thead>";
-            var tableContent = "<tbody>";
-
-            for (var feature_name in data_json) {
-                tableHeader = tableHeader + "<th>"+feature_name+"</th>";
-            }
-
-            tableHeader = tableHeader + "</thead>";
-
-            for (i = 0; i < no_of_data_points; i++) {
-
-                tableContent = tableContent + "<tr>";
-
-                for (feature_name in data_json) {
-                    var feature_value = Object.values(data_json[feature_name])[i]
-                    tableContent = tableContent +
-                                   "<td>" +
-                                   Number.parseFloat(feature_value).toFixed(4) +
-                                   "</td>";
-                }
-                tableContent = tableContent + "</tr>";
-            }
-
-            tableContent = tableContent + "</tbody>";
-
-            return tableHeader+tableContent;
-        }
-    </script>
-{% endblock %}
-
-
 {% block content %}
     <h1 align="center">Dataset loading</h1>
     </br>
@@ -99,20 +60,23 @@
             {% endfor %}
             </p>
         {% elif backend_response["available_data_features"] %}
-         <h3 align="center">Dataset {{ user.loaded_data_name }} loaded into memory.</h3>
-         </br>
-         <table id="loaded_data_summary" class="table table-stripped"></table>
-         {% set data_summary = backend_response["available_data_features"] %}
-         <script type="text/javascript">
-             document.getElementById("loaded_data_summary").innerHTML = make_table_from_json({{ data_summary | safe }})
-         </script>
-         {% set feature_href = url_for('features', dataset=user.loaded_data_name) %}
-         <form action="{{ feature_href }}" method="GET">
-             <input class="btn btn-primary" type="submit" value="Design features">
-         </form>
+             <h3 align="center">Dataset {{ user.loaded_data_name }} loaded into memory.</h3>
+             </br>
+             <table id="loaded_data_summary" class="table table-stripped"></table>
+             {% set data_summary = backend_response["available_data_features"] %}
+             <script type="text/javascript">
+                 document.getElementById("loaded_data_summary").innerHTML = make_table_from_json({{ data_summary | safe }})
+             </script>
+             {% set feature_href = url_for('features', dataset=user.loaded_data_name) %}
+              <script>
+                  console.log("{{ feature_href | safe }}")
+              </script>
+             <form action="{{ feature_href }}" method="GET">
+                 <input class="btn btn-primary" type="submit" value="Design features">
+             </form>
         {% else %}
-        <h3 align="center">No dataset currently present in backend memory</h3>
-        <p> Download a dataset via a URL or click on one of the available datasets from the list to the right</p>
+            <h3 align="center">No dataset currently present in backend memory</h3>
+            <p> Download a dataset via a URL or click on one of the available datasets from the list to the right</p>
         {% endif %}
     </div>
 {% endblock %}

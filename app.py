@@ -88,6 +88,7 @@ def features():
     backend_response = {"raw_data_preview": None,
                         "feature_preview": None,
                         "transform_error": None,
+                        "committed_feature_hash": None,
                         "data_loading_error": None}
 
     if request.method == "POST":
@@ -111,10 +112,12 @@ def features():
                                      axis=1)
 
             feature_preview = all_features.head(NO_OF_ROWS_TO_SHOW).to_json()
-            backend_response["feature_preview"] = feature_preview
 
             if commit_was_pressed:
-                user.commit_features(feature_preview=feature_preview)
+                feature_hash = user.commit_features(feature_preview=feature_preview)
+                backend_response["committed_feature_hash"] = feature_hash
+            else:
+                backend_response["feature_preview"] = feature_preview
 
         except DATA_ERRORS as error:
             backend_response["transform_error"] = error_with_traceback(error=error)
@@ -123,9 +126,6 @@ def features():
             backend_response["data_loading_error"] = error_with_traceback(error=data_error)
     else:
         user.feature_code = default_feature_code
-
-        if request.args.get("dataset"):
-            user.loaded_data_name = request.args.get("dataset")
 
     return render_template("feature_transform.html",
                            user=user,

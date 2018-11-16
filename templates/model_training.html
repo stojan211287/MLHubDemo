@@ -1,27 +1,25 @@
 {% extends "base.html" %}
 
 {% block startup_js %}
-    <script type="text/javascript">
-        function make_metrics_table_from_json(data_json) {
+    function make_metrics_table_from_json(data_json) {
 
-            var tableHeader = "<thead class='thead-dark'>";
-            var tableContent = "<tbody>";
-            tableContent = tableContent + "<tr>";
+        var tableHeader = "<thead class='thead-dark'>";
+        var tableContent = "<tbody>";
+        tableContent = tableContent + "<tr>";
 
-            for (var metric_name in data_json) {
-                tableHeader = tableHeader + "<th>"+metric_name+"</th>";
-                tableContent = tableContent +
-                               "<td>" +
-                               Number.parseFloat(data_json[metric_name]).toFixed(4) +
-                               "</td>";
-            }
-            tableContent = tableContent + "</tr>";
-            tableHeader = tableHeader + "</thead>";
-            tableContent = tableContent + "</tbody>";
-
-            return tableHeader+tableContent;
+        for (var metric_name in data_json) {
+            tableHeader = tableHeader + "<th>"+metric_name+"</th>";
+            tableContent = tableContent +
+                           "<td>" +
+                           Number.parseFloat(data_json[metric_name]).toFixed(4) +
+                           "</td>";
         }
-    </script>
+        tableContent = tableContent + "</tr>";
+        tableHeader = tableHeader + "</thead>";
+        tableContent = tableContent + "</tbody>";
+
+        return tableHeader+tableContent;
+    }
 {% endblock %}
 
 {% block content %}

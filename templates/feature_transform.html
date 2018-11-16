@@ -1,42 +1,5 @@
 {% extends "base.html" %}
 
-{% block startup_js %}
-    <script type="text/javascript">
-        function make_table_from_json(data_json) {
-
-            var first_feature_name = Object.keys(data_json)[0];
-            var no_of_data_points = Object.values(data_json[first_feature_name]).length;
-
-            var tableHeader = "<thead>";
-            var tableContent = "<tbody>";
-
-            for (var feature_name in data_json) {
-                tableHeader = tableHeader + "<th>"+feature_name+"</th>";
-            }
-
-            tableHeader = tableHeader + "</thead>";
-
-            for (i = 0; i < no_of_data_points; i++) {
-
-                tableContent = tableContent + "<tr>";
-
-                for (feature_name in data_json) {
-                    var feature_value = Object.values(data_json[feature_name])[i]
-                    tableContent = tableContent +
-                                   "<td>" +
-                                   Number.parseFloat(feature_value).toFixed(4) +
-                                   "</td>";
-                }
-                tableContent = tableContent + "</tr>";
-            }
-
-            tableContent = tableContent + "</tbody>";
-
-            return tableHeader+tableContent;
-        }
-    </script>
-{% endblock %}
-
 {% block content %}
     <h1 align="center">Feature transformations</h1>
     </br>
@@ -113,6 +76,10 @@
                document.getElementById("transformed_feature_table").innerHTML =
                make_table_from_json({{ backend_response["feature_preview"] | safe }});
             </script>
+        {% elif backend_response["committed_feature_hash"] %}
+            <h3 align="center">Feature transformation code successfully committed!</h3>
+            <p> Feature code has been assigned the hash {{ backend_response["committed_feature_hash"] }}. You can
+                now find your commit listed in the Commits tab.</p>
         {% else %}
             <h3 align="center">No transformed features to display</h3>
             <p>

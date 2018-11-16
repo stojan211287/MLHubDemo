@@ -7,7 +7,44 @@
     <link rel="stylesheet"
           href="{{url_for('.static', filename='style.css')}}">
     <title>{% block title %}{% endblock %}</title>
-    {% block startup_js %}{% endblock %}
+
+    <script type="text/javascript">
+        function make_table_from_json(data_json) {
+
+            var first_feature_name = Object.keys(data_json)[0];
+            var no_of_data_points = Object.values(data_json[first_feature_name]).length;
+
+            var tableHeader = "<thead>";
+            var tableContent = "<tbody>";
+
+            for (var feature_name in data_json) {
+                tableHeader = tableHeader + "<th>"+feature_name+"</th>";
+            }
+
+            tableHeader = tableHeader + "</thead>";
+
+            for (i = 0; i < no_of_data_points; i++) {
+
+                tableContent = tableContent + "<tr>";
+
+                for (feature_name in data_json) {
+                    var feature_value = Object.values(data_json[feature_name])[i]
+                    tableContent = tableContent +
+                                   "<td>" +
+                                   Number.parseFloat(feature_value).toFixed(4) +
+                                   "</td>";
+                }
+                tableContent = tableContent + "</tr>";
+            }
+
+            tableContent = tableContent + "</tbody>";
+
+            return tableHeader+tableContent;
+        }
+
+        {% block startup_js %}{% endblock %}
+
+    </script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">

@@ -25,6 +25,8 @@ class User:
         self.committed_features[feature_hash] = {"code": user_code_list,
                                                  "raw_data": self.loaded_data_name}
 
+        return feature_hash
+
     def add_dataset(self, url, dataset_name, target=None):
 
         self.available_datasets[dataset_name] = {"URL": url,
