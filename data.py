@@ -41,28 +41,30 @@ class DataLoader:
 
         if data_path.startswith("http"):
 
-            downloaded_file = self._download_and_cache_data(data_url=data_path)
-            local_file_suffix = downloaded_file.split(".")[-1]
+            downloaded_file_name = self._download_and_cache_data(data_url=data_path)
+            local_file_suffix = downloaded_file_name.split(".")[-1]
 
             if local_file_suffix.startswith("data"):
 
                 if header is not None:
-                    return pd.read_csv(downloaded_file,
-                                       header=0,
-                                       sep=",")
+                    data_file = pd.read_csv(downloaded_file_name,
+                                            header=0,
+                                            sep=",")
                 else:
-                    return pd.read_csv(downloaded_file,
-                                       header=0,
-                                       sep=",")
+                    data_file = pd.read_csv(downloaded_file_name,
+                                            header=0,
+                                            sep=",")
 
             elif local_file_suffix.startswith("csv"):
-                return pd.read_csv(downloaded_file,
-                                   header=0,
-                                   sep=";")
+                data_file = pd.read_csv(downloaded_file_name,
+                                        header=0,
+                                        sep=";")
             else:
                 raise DatasetFormatNotSupported
         else:
             raise MalformedDataUrl("%s is not a valid URL!" % (data_path, ))
+        
+        return data_file
 
     def _download_and_cache_data(self, data_url):
 

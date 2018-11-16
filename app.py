@@ -60,18 +60,18 @@ def datasets():
 
         except (MalformedDataUrl, DataNotFoundRemotly) as error:
             backend_response["data_loading_error"] = {"error_message": error}
-
     else:
         dataset_name = request.args.get("dataset")
 
         if dataset_name:
-            user.loaded_data_name = dataset_name
-            data_url = user.available_datasets[dataset_name]["URL"]
 
             try:
+                user.loaded_data_name = dataset_name
+                data_url = user.available_datasets[dataset_name]["URL"]
                 user.loaded_data = data_loader.load_data(data_path=data_url)
+
                 backend_response["available_data_features"] = user.loaded_data.describe().\
-                                                                    head(NO_OF_ROWS_TO_SHOW).to_json()
+                                                                   head(NO_OF_ROWS_TO_SHOW).to_json()
             except DataNotFoundRemotly as error:
                 backend_response["data_loading_error"] = {"error_message": error}
         else:
@@ -110,7 +110,6 @@ def features():
             all_features = pd.concat([parsed_df,
                                       user.loaded_data.loc[:, list(raw_features)]],
                                      axis=1)
-
             feature_preview = all_features.head(NO_OF_ROWS_TO_SHOW).to_json()
 
             if commit_was_pressed:
@@ -126,6 +125,9 @@ def features():
             backend_response["data_loading_error"] = error_with_traceback(error=data_error)
     else:
         user.feature_code = default_feature_code
+
+        if request.args.get("dataset"):
+            user.loaded_data_name = request.args.get("dataset")
 
     return render_template("feature_transform.html",
                            user=user,
