@@ -122,16 +122,16 @@ class FeatureParser:
 
         def get_all_generators(self):
 
-            generator_list = set()
+            generators = set()
 
             for feature in self.features:
                 try:
-                    generator_list |= set(feature.recipe["generators"])
+                    generators |= set(feature.recipe["generators"])
 
                 except (KeyError, TypeError):
-                    generator_list |= set(feature.name)
+                    generators |= set(feature.name)
 
-            return list(generator_list)
+            return generators
 
 
 if __name__ == "__main__":

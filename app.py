@@ -8,6 +8,8 @@ from user import User
 from data import DataLoadingError, DataLoader, MalformedDataUrl, DataNotFoundRemotly
 from models import TFModel
 
+import pandas as pd
+
 
 def create_app():
     application = Flask(__name__)
@@ -38,10 +40,11 @@ def index():
 def datasets():
 
     backend_response = {"data_loading_error": None,
+                        "available_data_features": None,
                         "loaded_data_features": None}
 
     if request.method == "POST":
-
+        # HANDLES POST REQUEST FROM Download BUTTON
         try:
             data_url = request.form.get("data_url")
 
@@ -58,12 +61,25 @@ def datasets():
         except (MalformedDataUrl, DataNotFoundRemotly) as error:
             backend_response["data_loading_error"] = {"error_message": error}
 
-        return render_template("datasets.html",
-                               user=user,
-                               backend_response=backend_response)
     else:
-        return render_template("datasets.html",
-                               user=user)
+        dataset_name = request.args.get("dataset")
+
+        if dataset_name:
+            user.loaded_data_name = dataset_name
+            data_url = user.available_datasets[dataset_name]["URL"]
+
+            try:
+                user.loaded_data = data_loader.load_data(data_path=data_url)
+                backend_response["available_data_features"] = user.loaded_data.describe().\
+                                                                    head(NO_OF_ROWS_TO_SHOW).to_json()
+            except DataNotFoundRemotly as error:
+                backend_response["data_loading_error"] = {"error_message": error}
+        else:
+            pass
+
+    return render_template("datasets.html",
+                           user=user,
+                           backend_response=backend_response)
 
 
 @app.route(rule="/features", methods=["GET", "POST"])
@@ -85,17 +101,16 @@ def features():
             user.loaded_data = data_loader.load_data(data_path=user.available_datasets[user.loaded_data_name]["URL"])
             parser, completed_code = construct_parser(code_raw_string=user.feature_code)
             used_feature_generators = parser.get_all_generators()
+            raw_features = set(user.loaded_data.columns.values) - used_feature_generators
 
-            try:
-                raw_data_preview = user.loaded_data[used_feature_generators].head(NO_OF_ROWS_TO_SHOW).to_json()
-                backend_response["raw_data_preview"] = raw_data_preview
-
-            # THIS IS FOR WHEN THE used_feature_generators ARE NOT IN THE INDEX OF THE RAW DATAFRAME
-            except KeyError as error:
-                backend_response["data_loading_error"] = error_with_traceback(error=error)
+            backend_response["raw_data_preview"] = user.loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
 
             parsed_df = parser.parse_to_df(data=user.loaded_data)
-            feature_preview = parsed_df.head(NO_OF_ROWS_TO_SHOW).to_json()
+            all_features = pd.concat([parsed_df,
+                                      user.loaded_data.loc[:, list(raw_features)]],
+                                     axis=1)
+
+            feature_preview = all_features.head(NO_OF_ROWS_TO_SHOW).to_json()
             backend_response["feature_preview"] = feature_preview
 
             if commit_was_pressed:

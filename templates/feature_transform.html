@@ -86,41 +86,41 @@
             <p>
                 This section will contain a preview of your raw data, once you have attempted to preview
                 valid feature transform code.
-            </p>
-            <p>
+
                 Possible errors that occur during raw data ingestion or feature transformation will
                 also be displayed, along with a stack trace.
             </p>
             {% endif %}
         </div>
+    </div>
+    <div class="container">
         <div align="center">
-            {% if backend_response["transform_error"] %}
-                <h3 align="center"> An error occurred while transform features of "{{ user.loaded_data_name }}"</h3>
-                <p>
-                    The error was: </br>
-                    <p><strong>{{ backend_response["transform_error"]['error'] }}</strong></p>
+        {% if backend_response["transform_error"] %}
+            <h3 align="center"> An error occurred while transform features of "{{ user.loaded_data_name }}"</h3>
+            <p>
+                The error was: </br>
+                <p><strong>{{ backend_response["transform_error"]['error'] }}</strong></p>
 
-                    <p>The traceback is: </br></br> {{ backend_response["transform_error"]['traceback'] }}</p>
-                </p>
-            {% elif backend_response["feature_preview"] %}
-                <h3 align="center">
-                    Preview of custom features, generated from the dataset "{{ user.loaded_data_name }}"
-                </h3>
-                </br>
-                <table id="transformed_feature_table" class="table table-striped"></table>
-                <script type=text/javascript>
-                   document.getElementById("transformed_feature_table").innerHTML =
-                   make_table_from_json({{ backend_response["feature_preview"] | safe }});
-                </script>
-            {% else %}
-                <h3 align="center">No transformed features to display</h3>
-                <p>
-                This section will contain a preview of your transformed features.
-                </br>
-                </br>
-                Preview feature transformation code using the 'Preview' button on the bottom left.
-                </p>
-            {% endif %}
-            </div>
+                <p>The traceback is: </br></br> {{ backend_response["transform_error"]['traceback'] }}</p>
+            </p>
+        {% elif backend_response["feature_preview"] %}
+            <h3 align="center">
+                Preview of custom features, generated from the dataset "{{ user.loaded_data_name }}"
+            </h3>
+            </br>
+            <table id="transformed_feature_table" class="table table-striped"></table>
+            <script type=text/javascript>
+               document.getElementById("transformed_feature_table").innerHTML =
+               make_table_from_json({{ backend_response["feature_preview"] | safe }});
+            </script>
+        {% else %}
+            <h3 align="center">No transformed features to display</h3>
+            <p>
+            This section will contain a preview of your transformed features.
+            </br>
+            Preview feature transformation code using the 'Preview' button on the bottom left.
+            </p>
+        {% endif %}
+        </div>
     </div>
 {% endblock %}
