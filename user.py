@@ -11,6 +11,7 @@ class User:
         self.loaded_data_name = None
 
         self.feature_code = None
+        self.model_code = None
 
         self.committed_features = None
 
@@ -31,3 +32,9 @@ class User:
 
         self.available_datasets[dataset_name] = {"URL": url,
                                                  "target": target}
+
+    def get_feature_def_list(self, commit_hash):
+        return self.committed_features[commit_hash]["code"]
+
+    def get_commit_data_name(self, commit_hash):
+        return self.committed_features[commit_hash]["raw_data"]

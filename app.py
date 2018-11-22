@@ -1,12 +1,17 @@
 from flask import Flask, Response, render_template, request
 from flask_bootstrap import Bootstrap
 
-from utils import default_feature_code, model_param_lookup, construct_parser, encode_target, error_with_traceback
-from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, TRAINING_ERRORS
+from utils import construct_parser, encode_target, error_with_traceback
+
+from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, default_feature_code, default_model_code
 
 from user import User
-from data import DataLoadingError, DataLoader, MalformedDataUrl, DataNotFoundRemotly
-from models import TFModel
+
+from data import DataLoader
+from data_errors import DataLoadingError, MalformedDataUrl, DataNotFoundRemotly
+
+from models import TorchModel
+from models_errors import UserCodeExecutionError, InputDataError
 
 import pandas as pd
 
@@ -141,50 +146,60 @@ def training():
 
     backend_response = {"model_class": None,
                         "model_eval": None,
-                        "model_docs": None,
                         "training_error": None}
 
     if request.method == "POST":
 
-        user.feature_code = request.form.get("code_box")
-        user.loaded_data_name = request.form.get("select_data")
-        model_class = request.form.get("select_model")
+        user.model_code = request.form.get("model_box")
+        feature_commit = request.form.get("select_commit")
 
         try:
+            user.loaded_data_name = user.get_commit_data_name(commit_hash=feature_commit)
+
             user.loaded_data = data_loader.load_data(data_path=user.available_datasets[user.loaded_data_name]["URL"])
 
-            parser, completed_code = construct_parser(code_raw_string=user.feature_code)
+            feature_def_list = user.get_feature_def_list(commit_hash=feature_commit)
+            feature_code = ";".join(feature_def_list)
+
+            parser, completed_code = construct_parser(code_raw_string=feature_code)
             parsed_data_df = parser.parse_to_df(user.loaded_data)
 
             # ATTACH TARGET COLUMN TO TRANSFORMED FEATURES
             target_name = user.available_datasets[user.loaded_data_name]["target"]
-
             encoded_target, n_classes = encode_target(raw_target=user.loaded_data[target_name])
             parsed_data_df[target_name] = encoded_target
 
-            model_params = model_param_lookup[model_class]
-            model_params["n_classes"] = n_classes
+            torch_model = TorchModel(model_code=user.model_code)
 
-            model = TFModel(tf_estimator_class=model_class,
-                            model_parameters=model_params,
-                            feature_parser=parser,
-                            model_export_directory="./model_export")
+            trained_model = torch_model.train(features=parsed_data_df,
+                                              target_name=target_name)
 
-            model_eval, data_with_model_predictions = model.train(features=parsed_data_df,
-                                                                  target=target_name,
-                                                                  num_steps=100)
+            # parsed_data_df[target_name] = encoded_target
 
-            # TODO: TAKE A LOOK AT THIS
-            model_docs = model.model_instance.__init__.__doc__.split("\n")
+            # model_params = model_param_lookup[model_class]
+            # model_params["n_classes"] = n_classes
+            #
+            # model = TFModel(tf_estimator_class=model_class,
+            #                 model_parameters=model_params,
+            #                 feature_parser=parser,
+            #                 model_export_directory="./model_export")
+            #
+            # model_eval, data_with_model_predictions = model.train(features=parsed_data_df,
+            #                                                       target=target_name,
+            #                                                       num_steps=100)
 
-            backend_response["model_class"] = model_class
-            backend_response["model_eval"] = model_eval
-            backend_response["model_docs"] = model_docs
+            # backend_response["model_class"] = model_class
+            # backend_response["model_eval"] = model_eval
 
-        except TRAINING_ERRORS as error:
-            backend_response["training_error"] = error_with_traceback(error=error)
+        except TypeError:
+            no_commit_error_message = "You must select a commit to train a model!"
+            backend_response["training_error"] = error_with_traceback(error=Exception(no_commit_error_message))
+
+        except (UserCodeExecutionError, InputDataError) as error:
+            code_exec_error_message = "An error occurred while executing your code: %s" % (str(error), )
+            backend_response["training_error"] = error_with_traceback(error=Exception(code_exec_error_message))
     else:
-        user.feature_code = default_feature_code
+        user.feature_code = default_model_code
 
     return render_template("model_training.html",
                            user=user,

@@ -7,47 +7,10 @@ from data import DataLoader
 from features import FeatureParser
 from constants import TRACEBACK_LIMIT
 
-default_feature_code = \
-"""FeatureDef(
-        name="log1pOfFixedAcidity",
-        kind="numeric",
-        recipe={
-                "generators": ["fixed acidity"],
-                "function": np.log1p
-                }
-);
-FeatureDef(
-        name="sumOfLog1pOfpHAndDensity",
-        kind="numeric",
-        recipe={
-                "generators": ["pH", "density"],
-                "function": lambda x, y: np.log1p(x)+np.log1p(y)
-                }
-);
-FeatureDef(
-        name="log1pOfSumOfpHAndDensity",
-        kind="numeric",
-        recipe={
-                "generators": ["pH", "density"],
-                "function": lambda x, y: np.log1p(x+y)
-                }
-);
-"""
-
-
-model_param_lookup = {
-                        "DNNClassifier": {
-                                        "hidden_units": [3, 5, 3]},
-                        "BoostedTreesClassifier": {"n_trees": 100,
-                                                   "max_depth": 6,
-                                                   "learning_rate": 0.1,
-                                                   "n_batches_per_layer": 1},
-                        "LinearClassifier": {}}
-
 
 def exec_user_code(code, module_name="feature_trans"):
 
-    user_module_path = os.path.join(".", ".user_module.py")
+    user_module_path = os.path.join(".", ".%s.py" % (module_name,))
 
     mod = types.ModuleType(module_name)
     mod.__file__ = user_module_path
@@ -58,7 +21,7 @@ def exec_user_code(code, module_name="feature_trans"):
     return mod
 
 
-def complete_user_code(user_code):
+def complete_feature_code(user_code):
 
     import_statements = """from features import FeatureDef;import numpy as np;"""
 
@@ -92,7 +55,7 @@ def encode_target(raw_target):
 
 def construct_parser(code_raw_string):
 
-    complete_code = complete_user_code(user_code=code_raw_string)
+    complete_code = complete_feature_code(user_code=code_raw_string)
     module_with_user_code = exec_user_code(code=complete_code)
 
     feature_list = getattr(module_with_user_code, "features")

@@ -25,26 +25,30 @@
 {% block content %}
     <h1 align="center">Model training</h1>
     </br>
-    <h4 align="center">Here, you can assess performance of a few classifier, using custom features and datasets</h4>
+    <h4 align="center">Here, you can assess performance of a few classifiers, using custom features and datasets</h4>
     <div class="container">
         <div align="center" class="form-group">
             <form action="{{ url_for('training') }}" method="POST">
-                <label for="select_data_models">Select a dataset: </label>
-                <select class="form-control-inline" id="select_data_models" name="select_data">
-                    {% for dataset_name, dataset_link in user.available_datasets.items() %}
-                        <option value="{{ dataset_name }}">{{ dataset_name }}</option>
-                    {% endfor %}
-                </select>
-                </br>
-                <label for="select_model">Select a model class: </label>
-                <select class="form-control-inline" id="select_model" name="select_model">
-                    <option value="DNNClassifier">Neural Network Classfier</option>
-                    <option value="LinearClassifier">Logistic Regression Classfier</option>
-                    <option value="BoostedTreesClassifier">Boosted Tree Classifier</option>
+                <label for="select_commit">Select a feature commit: </label>
+                <select class="form-control-inline" id="select_commit" name="select_commit">
+                    {% if user.committed_features %}
+                        {% for feature_commit in user.committed_features.keys()%}
+                            <option value="{{ feature_commit }}">{{ feature_commit }}</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="No commits!">No commits available</option>
+                    {% endif %}
                 </select>
                 </br>
                 </br>
-                <textarea cols="62" rows="25" id="code-box-models" name="code_box">{{ user.feature_code }}</textarea>
+                <p> Use the default code to train a custom model, or write your own!</p>
+                <p>
+                    Be aware that, in defining the model, you can use the pre-defined variables D_in and D_out.
+                    </br>
+                    They correspond, respectively, to the number of features in the feature commit, and the target
+                    dimension.</br>
+                    Both can be overwritten in your model code. </br>D_out defaults to 1.</p>
+                <textarea cols="62" rows="25" id="code-box-models" name="model_box">{{ user.feature_code }}</textarea>
                 </br>
                 <input type="submit" value="Train model" class="btn btn-primary"/>
             </form>

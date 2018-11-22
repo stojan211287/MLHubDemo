@@ -6,21 +6,7 @@ import pandas as pd
 import urllib.request
 from urllib.error import URLError
 
-
-class DataLoadingError(Exception):
-    pass
-
-
-class DataNotFoundRemotly(DataLoadingError):
-    pass
-
-
-class DatasetFormatNotSupported(DataLoadingError):
-    pass
-
-
-class MalformedDataUrl(DataLoadingError):
-    pass
+from data_errors import DataNotFoundRemotly, DatasetFormatNotSupported, MalformedDataUrl
 
 
 class DataLoader:
