@@ -3,14 +3,15 @@ from flask_bootstrap import Bootstrap
 
 from utils import construct_parser, encode_target, error_with_traceback
 
-from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, default_feature_code, default_model_code
+from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, \
+    default_feature_code, default_model_code, model_param_lookup
 
 from user import User
 
 from data import DataLoader
 from data_errors import DataLoadingError, MalformedDataUrl, DataNotFoundRemotly
 
-from models import TorchModel
+from models import LogReg, TFModel
 from models_errors import UserCodeExecutionError, InputDataError
 
 import pandas as pd
@@ -155,7 +156,6 @@ def training():
 
         try:
             user.loaded_data_name = user.get_commit_data_name(commit_hash=feature_commit)
-
             user.loaded_data = data_loader.load_data(data_path=user.available_datasets[user.loaded_data_name]["URL"])
 
             feature_def_list = user.get_feature_def_list(commit_hash=feature_commit)
@@ -164,32 +164,38 @@ def training():
             parser, completed_code = construct_parser(code_raw_string=feature_code)
             parsed_data_df = parser.parse_to_df(user.loaded_data)
 
-            # ATTACH TARGET COLUMN TO TRANSFORMED FEATURES
+            used_feature_generators = parser.get_all_generators()
+            raw_features = set(user.loaded_data.columns.values) - used_feature_generators
+
+            backend_response["raw_data_preview"] = user.loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
+
+            parsed_df = parser.parse_to_df(data=user.loaded_data)
+            all_features = pd.concat([parsed_df,
+                                      user.loaded_data.loc[:, list(raw_features)]],
+                                     axis=1)
+
+            model_class = "DNNClassifier"
+
+            # GET TARGET COLUMN FOR TRANSFORMED FEATURES
             target_name = user.available_datasets[user.loaded_data_name]["target"]
             encoded_target, n_classes = encode_target(raw_target=user.loaded_data[target_name])
+
             parsed_data_df[target_name] = encoded_target
 
-            torch_model = TorchModel(model_code=user.model_code)
+            model_params = model_param_lookup[model_class]
+            model_params["n_classes"] = n_classes
 
-            trained_model = torch_model.train(features=parsed_data_df,
-                                              target_name=target_name)
+            model = TFModel(tf_estimator_class=model_class,
+                            model_parameters=model_params,
+                            feature_parser=parser,
+                            model_export_directory="./model_export")
 
-            # parsed_data_df[target_name] = encoded_target
+            model_eval, data_with_model_predictions = model.train(features=parsed_data_df,
+                                                                  target=target_name,
+                                                                  num_steps=100)
 
-            # model_params = model_param_lookup[model_class]
-            # model_params["n_classes"] = n_classes
-            #
-            # model = TFModel(tf_estimator_class=model_class,
-            #                 model_parameters=model_params,
-            #                 feature_parser=parser,
-            #                 model_export_directory="./model_export")
-            #
-            # model_eval, data_with_model_predictions = model.train(features=parsed_data_df,
-            #                                                       target=target_name,
-            #                                                       num_steps=100)
-
-            # backend_response["model_class"] = model_class
-            # backend_response["model_eval"] = model_eval
+            backend_response["model_class"] = model_class
+            backend_response["model_eval"] = model_eval
 
         except TypeError:
             no_commit_error_message = "You must select a commit to train a model!"
