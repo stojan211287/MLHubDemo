@@ -30,8 +30,7 @@
         <div align="center" class="form-group">
             {% if backend_response["data_loading_error"] %}
                 <h3 align="center"> An error occurred while attempting to load "{{ user.loaded_data_name }}"</h3>
-                <p>
-                    The error was: </br>
+                <p>The error was: </br>
                     <p><strong>{{ backend_response["data_loading_error"]['error'] }}</strong></p>
                     <p>The traceback is: </br></br>{{ backend_response["data_loading_error"]['traceback'] }}</p>
                 </p>

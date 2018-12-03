@@ -91,12 +91,22 @@ class FeatureParser:
 
         def parse_to_df(self, data):
 
-            parsed_data_dict = self.parse(data)
+            parsed_feature_dict = {}
 
-            for feature_name, parsed_feature in parsed_data_dict.items():
-                parsed_data_dict[feature_name] = parsed_feature.values
+            for feature in self.features:
+                parsed_feature_dict[feature.name] = feature.parse(data=data).values
 
-            return pd.DataFrame.from_dict(parsed_data_dict)
+            return pd.DataFrame.from_dict(parsed_feature_dict)
+
+        def add_parsed_to_data(self, data):
+
+            custom_features_df = self.parse_to_df(data=data)
+
+            used_feature_generators = self._get_all_generators()
+            raw_features = set(data.columns.values) - used_feature_generators
+
+            return pd.concat([custom_features_df, data.loc[:, list(raw_features)]],
+                             axis=1)
 
         def get_tf_feature_columns(self, data):
 
@@ -120,7 +130,7 @@ class FeatureParser:
 
             return feature_columns
 
-        def get_all_generators(self):
+        def _get_all_generators(self):
 
             generators = set()
 

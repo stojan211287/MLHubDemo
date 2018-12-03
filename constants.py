@@ -66,7 +66,7 @@ loss_fn = torch.nn.MSELoss(reduction='sum')
 
 model_param_lookup = {
                         "DNNClassifier": {
-                                        "hidden_units": [3, 5, 3]},
+                                        "hidden_units": [10, 12, 10]},
                         "BoostedTreesClassifier": {"n_trees": 100,
                                                    "max_depth": 6,
                                                    "learning_rate": 0.1,

@@ -1,4 +1,6 @@
-from flask import Flask, Response, render_template, request
+import os
+
+from flask import Flask, Response, render_template, request, session, flash
 from flask_bootstrap import Bootstrap
 
 from utils import construct_parser, encode_target, error_with_traceback
@@ -11,10 +13,8 @@ from user import User
 from data import DataLoader
 from data_errors import DataLoadingError, MalformedDataUrl, DataNotFoundRemotly
 
-from models import LogReg, TFModel
+from models import TFModel
 from models_errors import UserCodeExecutionError, InputDataError
-
-import pandas as pd
 
 
 def create_app():
@@ -34,12 +34,23 @@ data_loader = DataLoader(local_data_dir="./data")
 
 # INIT APP
 app = create_app()
-app.config['SECRET_KEY'] = "ThisIsSuperSecret"
+
+
+@app.route("/login", methods=["GET", "POST"])
+def do_admin_login():
+    if request.form["password"] == "admin" and request.form["username"] == "admin":
+        session["logged_in"] = True
+    else:
+        flash("Wrong password!")
+    return index()
 
 
 @app.route(rule="/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        return render_template("index.html")
 
 
 @app.route(rule="/datasets", methods=["GET", "POST"])
@@ -107,15 +118,11 @@ def features():
         try:
             user.loaded_data = data_loader.load_data(data_path=user.available_datasets[user.loaded_data_name]["URL"])
             parser, completed_code = construct_parser(code_raw_string=user.feature_code)
-            used_feature_generators = parser.get_all_generators()
-            raw_features = set(user.loaded_data.columns.values) - used_feature_generators
 
             backend_response["raw_data_preview"] = user.loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
 
-            parsed_df = parser.parse_to_df(data=user.loaded_data)
-            all_features = pd.concat([parsed_df,
-                                      user.loaded_data.loc[:, list(raw_features)]],
-                                     axis=1)
+            all_features = parser.add_parsed_to_data(data=user.loaded_data)
+
             feature_preview = all_features.head(NO_OF_ROWS_TO_SHOW).to_json()
 
             if commit_was_pressed:
@@ -162,17 +169,10 @@ def training():
             feature_code = ";".join(feature_def_list)
 
             parser, completed_code = construct_parser(code_raw_string=feature_code)
-            parsed_data_df = parser.parse_to_df(user.loaded_data)
-
-            used_feature_generators = parser.get_all_generators()
-            raw_features = set(user.loaded_data.columns.values) - used_feature_generators
 
             backend_response["raw_data_preview"] = user.loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
 
-            parsed_df = parser.parse_to_df(data=user.loaded_data)
-            all_features = pd.concat([parsed_df,
-                                      user.loaded_data.loc[:, list(raw_features)]],
-                                     axis=1)
+            all_features = parser.add_parsed_to_data(data=user.loaded_data)
 
             model_class = "DNNClassifier"
 
@@ -180,7 +180,7 @@ def training():
             target_name = user.available_datasets[user.loaded_data_name]["target"]
             encoded_target, n_classes = encode_target(raw_target=user.loaded_data[target_name])
 
-            parsed_data_df[target_name] = encoded_target
+            all_features[target_name] = encoded_target
 
             model_params = model_param_lookup[model_class]
             model_params["n_classes"] = n_classes
@@ -190,7 +190,7 @@ def training():
                             feature_parser=parser,
                             model_export_directory="./model_export")
 
-            model_eval, data_with_model_predictions = model.train(features=parsed_data_df,
+            model_eval, data_with_model_predictions = model.train(features=all_features,
                                                                   target=target_name,
                                                                   num_steps=100)
 
@@ -253,6 +253,8 @@ def deployment():
 
 
 if __name__ == "__main__":
+
+    app.config['SECRET_KEY']  = os.urandom(12)
 
     app.run(host="0.0.0.0",
             port=5000,

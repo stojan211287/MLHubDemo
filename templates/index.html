@@ -3,33 +3,33 @@
 {% block content %}
     <h1 align="center">Welcome to MLHub</h1>
     </br>
-    <h4 align="center">This is a ripoff of FloydHub that has waay fewer features. To start, select
+    <h4 align="center">This is a ripoff of FloydHub that has waay fewer features. </br></br> To start, select
             one of the playgrounds from the navigation bar or the menu to the right.</h4>
 
     <div align="center">
         <div class="list-group">
             <a href="{{ url_for('datasets') }}"
-               class="list-group-item list-group-item-action active">
+               class="btn btn-index">
                 Dataset download and selection
             </a>
             </br>
             <a href="{{ url_for('features') }}"
-               class="list-group-item list-group-item-action active">
+               class="btn btn-index">
                 Feature transformations design
             </a>
             </br>
             <a href="{{ url_for('training') }}"
-               class="list-group-item list-group-item-action active">
+               class="btn btn-index">
                 Model training and evaluation
             </a>
             </br>
             <a href="{{ url_for('deployment') }}"
-               class="list-group-item list-group-item-action active">
+               class="btn btn-index">
                 Model deployment testing
             </a>
             </br>
             <a href="{{ url_for('docs') }}"
-               class="list-group-item list-group-item-action active">
+               class="btn btn-index">
                 Documentation and examples
             </a>
         </div>
