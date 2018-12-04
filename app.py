@@ -34,6 +34,8 @@ data_loader = DataLoader(local_data_dir="./data")
 
 # INIT APP
 app = create_app()
+# RANDOMIZE SECRET KEY
+app.config['SECRET_KEY'] = os.urandom(12)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -253,8 +255,6 @@ def deployment():
 
 
 if __name__ == "__main__":
-
-    app.config['SECRET_KEY']  = os.urandom(12)
 
     app.run(host="0.0.0.0",
             port=5000,
