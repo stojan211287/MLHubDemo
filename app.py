@@ -1,19 +1,19 @@
 import os
 
-from flask import Flask, Response, render_template, request, session, flash
+from flask import Flask, Response, render_template, request, flash
 from flask_bootstrap import Bootstrap
 
-from utils import construct_parser, encode_target, error_with_traceback
+from utils import construct_parser, error_with_traceback
 
-from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, \
-    default_feature_code, default_model_code, model_param_lookup
+from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, ADMIN, SUPER_SAFE_ADMIN_PASSWORD, \
+    default_feature_code, default_model_code
 
-from user import User
+from session import UserSession
 
 from data import DataLoader
 from data_errors import DataLoadingError, MalformedDataUrl, DataNotFoundRemotly
 
-from models import TFModel
+from models import KerasModel
 from models_errors import UserCodeExecutionError, InputDataError
 
 
@@ -23,25 +23,23 @@ def create_app():
     return application
 
 
-# TODO: GET RID OF THIS
-data_with_model_predictions = None
-
 # MAKE USER
-user = User(datasets=DATASETS)
+user_session = UserSession(datasets=DATASETS)
 
 # MAKE DATA LOADER
 data_loader = DataLoader(local_data_dir="./data")
 
 # INIT APP
 app = create_app()
+
 # RANDOMIZE SECRET KEY
 app.config['SECRET_KEY'] = os.urandom(12)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def do_admin_login():
-    if request.form["password"] == "admin" and request.form["username"] == "admin":
-        session["logged_in"] = True
+    if request.form["password"] == SUPER_SAFE_ADMIN_PASSWORD and request.form["username"] == ADMIN:
+        user_session.logged_in = True
     else:
         flash("Wrong password!")
     return index()
@@ -49,7 +47,7 @@ def do_admin_login():
 
 @app.route(rule="/", methods=["GET", "POST"])
 def index():
-    if not session.get('logged_in'):
+    if not user_session.logged_in:
         return render_template('login.html')
     else:
         return render_template("index.html")
@@ -69,13 +67,13 @@ def datasets():
 
             new_dataset_name = data_url.split("/")[-1].split(".")[0]
 
-            user.loaded_data = data_loader.load_data(data_path=data_url)
-            user.loaded_data_name = new_dataset_name
+            user_session.loaded_data = data_loader.load_data(data_path=data_url)
+            user_session.loaded_data_name = new_dataset_name
 
-            user.add_dataset(url=data_url,
-                             dataset_name=new_dataset_name)
+            user_session.add_dataset(url=data_url,
+                                     dataset_name=new_dataset_name)
 
-            backend_response["loaded_data_features"] = user.loaded_data.columns
+            backend_response["loaded_data_features"] = user_session.loaded_data.columns
 
         except (MalformedDataUrl, DataNotFoundRemotly) as error:
             backend_response["data_loading_error"] = {"error_message": error}
@@ -83,21 +81,19 @@ def datasets():
         dataset_name = request.args.get("dataset")
 
         if dataset_name:
-
             try:
-                user.loaded_data_name = dataset_name
-                data_url = user.available_datasets[dataset_name]["URL"]
-                user.loaded_data = data_loader.load_data(data_path=data_url)
+                user_session.loaded_data_name = dataset_name
+                data_url = user_session.available_datasets[dataset_name]
+                user_session.loaded_data = data_loader.load_data(data_path=data_url)
 
-                backend_response["available_data_features"] = user.loaded_data.describe().\
-                                                                   head(NO_OF_ROWS_TO_SHOW).to_json()
+                backend_response["available_data_features"] = user_session.loaded_data.describe().\
+                    head(NO_OF_ROWS_TO_SHOW).to_json()
+
             except DataNotFoundRemotly as error:
                 backend_response["data_loading_error"] = {"error_message": error}
-        else:
-            pass
 
     return render_template("datasets.html",
-                           user=user,
+                           user=user_session,
                            backend_response=backend_response)
 
 
@@ -112,24 +108,24 @@ def features():
 
     if request.method == "POST":
 
-        user.feature_code = request.form.get("code_box")
-        user.loaded_data_name = request.form.get("select_data")
+        user_session.feature_code = request.form.get("code_box")
+        user_session.loaded_data_name = request.form.get("select_data")
 
         commit_was_pressed = request.form.get("commit_button")
 
         try:
-            user.loaded_data = data_loader.load_data(data_path=user.available_datasets[user.loaded_data_name]["URL"])
-            parser, completed_code = construct_parser(code_raw_string=user.feature_code)
+            user_session.loaded_data = data_loader.\
+                load_data(data_path=user_session.available_datasets[user_session.loaded_data_name])
+            parser, completed_code = construct_parser(code_raw_string=user_session.feature_code)
 
-            backend_response["raw_data_preview"] = user.loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
+            backend_response["raw_data_preview"] = user_session.loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
 
-            all_features = parser.add_parsed_to_data(data=user.loaded_data)
-
+            all_features = parser.add_parsed_to_data(data=user_session.loaded_data)
             feature_preview = all_features.head(NO_OF_ROWS_TO_SHOW).to_json()
 
             if commit_was_pressed:
-                feature_hash = user.commit_features(feature_preview=feature_preview)
-                backend_response["committed_feature_hash"] = feature_hash
+                user_session.commit_features(feature_preview=feature_preview, all_features=all_features.columns.values)
+                backend_response["committed_feature_hash"] = user_session.latest_commit
             else:
                 backend_response["feature_preview"] = feature_preview
 
@@ -139,64 +135,45 @@ def features():
         except DataLoadingError as data_error:
             backend_response["data_loading_error"] = error_with_traceback(error=data_error)
     else:
-        user.feature_code = default_feature_code
+        user_session.feature_code = default_feature_code
 
         if request.args.get("dataset"):
-            user.loaded_data_name = request.args.get("dataset")
+            user_session.loaded_data_name = request.args.get("dataset")
 
     return render_template("feature_transform.html",
-                           user=user,
+                           user=user_session,
                            backend_response=backend_response)
 
 
 @app.route(rule="/training", methods=["GET", "POST"])
 def training():
 
-    global data_with_model_predictions
-
-    backend_response = {"model_class": None,
-                        "model_eval": None,
+    backend_response = {"model_eval": None,
                         "training_error": None}
 
     if request.method == "POST":
 
-        user.model_code = request.form.get("model_box")
+        user_session.model_code = request.form.get("model_box")
         feature_commit = request.form.get("select_commit")
+        target_name = request.form.get("select_target")
 
         try:
-            user.loaded_data_name = user.get_commit_data_name(commit_hash=feature_commit)
-            user.loaded_data = data_loader.load_data(data_path=user.available_datasets[user.loaded_data_name]["URL"])
+            user_session.loaded_data_name = user_session.get_commit_data_name(commit_hash=feature_commit)
+            user_session.loaded_data = data_loader.\
+                load_data(data_path=user_session.available_datasets[user_session.loaded_data_name])
 
-            feature_def_list = user.get_feature_def_list(commit_hash=feature_commit)
+            feature_def_list = user_session.get_feature_def_list(commit_hash=feature_commit)
             feature_code = ";".join(feature_def_list)
 
             parser, completed_code = construct_parser(code_raw_string=feature_code)
 
-            backend_response["raw_data_preview"] = user.loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
+            all_features = parser.add_parsed_to_data(data=user_session.loaded_data)
 
-            all_features = parser.add_parsed_to_data(data=user.loaded_data)
+            model = KerasModel(model_code=user_session.model_code)
 
-            model_class = "DNNClassifier"
+            model_eval, data_with_preds = model.train_and_eval(features=all_features, target_name=target_name)
+            user_session.latest_predictions = data_with_preds
 
-            # GET TARGET COLUMN FOR TRANSFORMED FEATURES
-            target_name = user.available_datasets[user.loaded_data_name]["target"]
-            encoded_target, n_classes = encode_target(raw_target=user.loaded_data[target_name])
-
-            all_features[target_name] = encoded_target
-
-            model_params = model_param_lookup[model_class]
-            model_params["n_classes"] = n_classes
-
-            model = TFModel(tf_estimator_class=model_class,
-                            model_parameters=model_params,
-                            feature_parser=parser,
-                            model_export_directory="./model_export")
-
-            model_eval, data_with_model_predictions = model.train(features=all_features,
-                                                                  target=target_name,
-                                                                  num_steps=100)
-
-            backend_response["model_class"] = model_class
             backend_response["model_eval"] = model_eval
 
         except TypeError:
@@ -207,17 +184,19 @@ def training():
             code_exec_error_message = "An error occurred while executing your code: %s" % (str(error), )
             backend_response["training_error"] = error_with_traceback(error=Exception(code_exec_error_message))
     else:
-        user.feature_code = default_model_code
+        user_session.model_code = default_model_code
 
     return render_template("model_training.html",
-                           user=user,
+                           user=user_session,
                            backend_response=backend_response)
 
 
 @app.route(rule="/mlhub-model-predictions", methods=["GET"])
 def get_predictions():
 
-    if data_with_model_predictions is not None:
+    if user_session.latest_predictions is not None:
+
+        data_with_model_predictions = user_session.latest_predictions
 
         def prediction_generator():
 
@@ -245,13 +224,13 @@ def docs():
 @app.route(rule="/commits", methods=["GET"])
 def commits():
     return render_template("commits.html",
-                           user=user)
+                           user=user_session)
 
 
 @app.route(rule="/deployment", methods=["GET"])
 def deployment():
     return render_template("deployment.html",
-                           user=user)
+                           user=user_session)
 
 
 if __name__ == "__main__":

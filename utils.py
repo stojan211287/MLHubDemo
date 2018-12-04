@@ -27,6 +27,15 @@ def complete_feature_code(user_code):
 
     feature_def_elements = user_code.split(";")[:-1]  # ELIMINATE POSSIBLE STUFF AFTER THE LAST SEMICOLON
 
+    not_feature_defs = []
+
+    for maybe_feature_def in feature_def_elements:
+        if not maybe_feature_def.strip().startswith("FeatureDef"):
+            not_feature_defs.append(maybe_feature_def)
+
+    for not_feature_def in not_feature_defs:
+        feature_def_elements.remove(not_feature_def)
+
     feature_list_code = "features = ["+",".join(feature_def_elements)+"]"
 
     return import_statements+feature_list_code
@@ -42,7 +51,6 @@ def encode_target(raw_target):
     encoded_target = raw_target.astype(int)
 
     unique_target_values = encoded_target.unique()
-    n_classes = len(unique_target_values)
 
     target_value_lookup = {true_target_value: target_value_code
                            for target_value_code, true_target_value in enumerate(sorted(unique_target_values))}
@@ -50,7 +58,7 @@ def encode_target(raw_target):
     for i, value in enumerate(encoded_target):
         encoded_target[i] = target_value_lookup[value]
 
-    return encoded_target, n_classes
+    return encoded_target
 
 
 def construct_parser(code_raw_string):

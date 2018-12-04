@@ -3,5 +3,6 @@
 /models
 /venv
 /.idea
+/saved_models
 
 .DS_Store

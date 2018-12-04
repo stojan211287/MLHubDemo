@@ -5,3 +5,8 @@ class UserCodeExecutionError(Exception):
 
 class InputDataError(Exception):
     pass
+
+
+class DeploymentError(Exception):
+    pass
+

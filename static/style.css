@@ -16,7 +16,7 @@
     font-size: 25px;
 }
 
-#select_model {
+#select_target {
     min-width: 35%;
     font-size: 25px;
 }
@@ -92,7 +92,7 @@
 .block {
     display: flex;
     align-items: flex-start;
-    background: #ccc;
+    background: #ECF0F1;
     padding: 1rem;
     width: 100%;
     margin: 0 0 1rem 0;

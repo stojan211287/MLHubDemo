@@ -2,15 +2,16 @@ BASE_DATA_URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/"
 NO_OF_ROWS_TO_SHOW = 15
 TRACEBACK_LIMIT = 2
 
+MODEL_SAVE_DIR = "saved_models"
+
+ADMIN = "admin"
+SUPER_SAFE_ADMIN_PASSWORD = "admin"
+
 DATASETS = {
-    "RedWineQuality": {"URL": BASE_DATA_URL+"wine-quality/winequality-red.csv",
-                       "target": "quality"},
-    "WhiteWineQuality": {"URL": BASE_DATA_URL+"wine-quality/winequality-white.csv",
-                         "target": "quality"},
-    "BreastCancerWisconsinDataset": {"URL":BASE_DATA_URL+"breast-cancer-wisconsin/breast-cancer-wisconsin.data",
-                                     "target": 10},
-    "ErrorDataset": {"URL": BASE_DATA_URL+"this-is-not-a-dataset.fsv",
-                     "target": "there_is_no_target"}
+    "RedWineQuality": BASE_DATA_URL+"wine-quality/winequality-red.csv",
+    "WhiteWineQuality": BASE_DATA_URL+"wine-quality/winequality-white.csv",
+    "BreastCancerWisconsinDataset": BASE_DATA_URL+"breast-cancer-wisconsin/breast-cancer-wisconsin.data",
+    "ErrorDataset": BASE_DATA_URL+"this-is-not-a-dataset.fsv",
 }
 
 DATA_ERRORS = (NameError, SyntaxError, AttributeError, KeyError, ValueError, TypeError)
@@ -47,21 +48,30 @@ FeatureDef(
 
 default_model_code = \
 """
-H_1 = 3
-H_2 = 5
-H_3 = 3
+# This is a pre-defined multi-class MLP model
 
-model = torch.nn.Sequential(
-    torch.nn.Linear(D_in, H_1),
-    torch.nn.ReLU(),
-    torch.nn.Linear(H_1, H_2),
-    torch.nn.ReLU(),
-    torch.nn.Linear(H_2, H_3),
-    torch.nn.ReLU(),
-    torch.nn.Linear(H_3, D_out),
-)
+# Notice that it is using values D_in and D_out
+# These are variables, pre-defined by MLHub
 
-loss_fn = torch.nn.MSELoss(reduction='sum')
+# D_in = number of features in chosen feature commit 
+# D_out = number of unique values in the chosen target feature
+
+H_1 = 20
+H_2 = 30
+H_3 = 20
+
+model = Sequential()
+
+model.add(Dense(H_1, activation='relu', input_dim=D_in))
+model.add(Dropout(0.5))
+
+model.add(Dense(H_2, activation='relu'))
+model.add(Dropout(0.5))
+
+model.add(Dense(H_3, activation='relu'))
+model.add(Dropout(0.5))
+
+model.add(Dense(D_out, activation='softmax'))
 """
 
 model_param_lookup = {

@@ -46,9 +46,9 @@ def main():
                     feature_parser=parser,
                     model_export_directory=os.environ["MFH_LOCAL_MODEL_DIR"])
 
-    model.train(features=parsed_data_df,
-                target=target,
-                num_steps=100)
+    model.train_and_eval(features=parsed_data_df,
+                         target=target,
+                         num_steps=100)
 
     model.deploy()
 

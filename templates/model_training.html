@@ -9,11 +9,15 @@
 
         for (var metric_name in data_json) {
             tableHeader = tableHeader + "<th>"+metric_name+"</th>";
-            tableContent = tableContent +
-                           "<td>" +
-                           Number.parseFloat(data_json[metric_name]).toFixed(4) +
-                           "</td>";
+
+            if (metric_name == "target_name") {
+                var tableEntry = data_json[metric_name];
+            } else {
+                var tableEntry = Number.parseFloat(data_json[metric_name]).toFixed(4);
+            }
+            tableContent = tableContent + "<td>" + tableEntry + "</td>";
         }
+
         tableContent = tableContent + "</tr>";
         tableHeader = tableHeader + "</thead>";
         tableContent = tableContent + "</tbody>";
@@ -25,7 +29,7 @@
 {% block content %}
     <h1 align="center">Model training</h1>
     </br>
-    <h4 align="center">Here, you can assess performance of a few classifiers, using custom features and datasets</h4>
+    <h4 align="center">Here, you can assess performance of a custom classifier</h4>
     <div class="container">
         <div align="center" class="form-group">
             <form action="{{ url_for('training') }}" method="POST">
@@ -33,7 +37,11 @@
                 <select class="form-control-inline" id="select_commit" name="select_commit">
                     {% if user.committed_features %}
                         {% for feature_commit in user.committed_features.keys()%}
-                            <option value="{{ feature_commit }}">{{ feature_commit }}</option>
+                            {% if feature_commit == user.latest_commit %}
+                                <option value="{{ feature_commit }}" selected>{{ feature_commit }}</option>
+                            {% else %}
+                                <option value="{{ feature_commit }}">{{ feature_commit }}</option>
+                            {% endif %}
                         {% endfor %}
                     {% else %}
                         <option value="No commits!">No commits available</option>
@@ -41,26 +49,33 @@
                 </select>
                 </br>
                 </br>
-                <p> Use the default code to train a custom model, or write your own!</p>
-                <textarea cols="62" rows="25" id="code-box-models" name="model_box">{{ user.feature_code }}</textarea>
+                <label for="select_commit">Select a target column: </label>
+                <select class="form-control-inline" id="select_target" name="select_target">
+                    {% if user.committed_features  %}
+                        {% for feature in user.committed_features[user.latest_commit]['all_features']%}
+                            <option value="{{ feature }}">{{ feature }}</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="No dataset loaded!">No dataset loaded</option>
+                    {% endif %}
+                </select>
+                </br>
+                </br>
+                <textarea cols="62" rows="25" id="code-box-models" name="model_box">{{ user.model_code }}</textarea>
                 </br>
                 <input type="submit" value="Train model" class="btn btn-primary"/>
             </form>
         </div>
         <div align="center" class="form-group">
-            {% if backend_response["model_class"] %}
+            {% if backend_response["model_eval"] %}
                 <h3 align="center">Model training successful!</h3>
-                {% set model_class = backend_response["model_class"] %}
                 <p>
-                    You have successfully trained a Tensorflow Estimator
-                    <strong>
-                       {{ backend_response["model_class"] }}
-                    </strong> model on the dataset called
+                    You have successfully trained a custom Keras model on the dataset called
                     <strong>
                     {{ user.loaded_data_name }}
                     </strong>.
                 </p>
-                <h3 align="center">{{ model_class }} performance metrics on {{ user.loaded_data_name }}</h3>
+                <h3 align="center">Custom model performance metrics on {{ user.loaded_data_name }}</h3>
                 </br>
                 <div id="prediction_eval_table"><table id="prediction_table" class="table"></table></div>
                 {% set eval = backend_response["model_eval"] %}
@@ -69,7 +84,7 @@
                    .innerHTML = make_metrics_table_from_json({{ eval | safe }});
                 </script>
                 <form class="form-group" action="{{ url_for('get_predictions') }}" method="GET">
-                    <input type="submit" value="Download model predictions" class="btn btn-primary">
+                    <input type="submit" value="Download predictions" class="btn btn-primary">
                 </form>
             {% elif backend_response["training_error"] %}
                 <h3 align="center">Model training unsuccessful!</h3>
