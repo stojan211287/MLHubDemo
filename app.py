@@ -20,6 +20,8 @@ from data_errors import DataLoadingError, MalformedDataUrl, DataNotFoundRemotly
 from models import KerasModel
 from models_errors import UserCodeExecutionError, InputDataError
 
+from deployed_model import DeploymentError, DeployedModel
+
 
 def create_app():
     application = Flask(__name__)
@@ -38,6 +40,8 @@ app = create_app()
 
 # RANDOMIZE SECRET KEY
 app.config['SECRET_KEY'] = os.urandom(12)
+
+deployed_model = DeployedModel()
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -247,22 +251,18 @@ def deploy_model():
     model_code = user_session.loaded_data_name+"_"+datetime.now().strftime("%Y-%m-%d")
 
     latest_model = user_session.latest_trained_model
-
     latest_model.deploy(model_id=model_code)
 
-    deploy_response = requests.get(url=DEPLOY_SERVICE_ADDRESS,
-                                   params={"model_code": model_code})
+    try:
+        deployed_model.load_model(model_code=model_code)
 
-    response_content = deploy_response.json()
-
-    user_session.available_models.update({model_code: {"model_instance": latest_model,
-                                                       "model_summary": latest_model.summarise()}
-                                          })
-
-    if deploy_response.status_code == 200:
+        user_session.available_models.update({model_code: {"model_instance": latest_model,
+                                                           "model_summary": latest_model.summarise()}
+                                              })
         return redirect(url_for("commits"))
-    else:
-        return jsonify(error="There was an error while deploying. %s" % (response_content["error"]))
+
+    except DeploymentError as error:
+        return jsonify(error="Deployment error: %s" % (str(error),)), 500
 
 
 @app.route(rule="/logout", methods=["GET"])
