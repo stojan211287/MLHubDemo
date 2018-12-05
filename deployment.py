@@ -1,40 +1,46 @@
-import os
-import threading
-import tensorflow as tf
+from flask import Flask, request, jsonify
 
-from keras.models import load_model
-from flask import Flask, request
+from deployed_model import DeployedModel, DeploymentError
 
-from constants import MODEL_SAVE_DIR
+deployment = Flask(__name__)
+
+deployed_model = DeployedModel()
 
 
-class DeployedModel(threading.Thread):
+@deployment.route(rule="/", methods=["GET"])
+def get_models():
+    pass
 
-    def __init__(self, model_code):
 
-        threading.Thread.__init__(self)
+@deployment.route(rule="/deploy", methods=["GET"])
+def deploy():
 
-        self.code = model_code
-        self.app = Flask("running_model")
+    model_code = request.args.get("model_code")
 
-        save_path = os.path.join(".", MODEL_SAVE_DIR)
+    if model_code:
+        try:
+            deployed_model.load_model(model_code=model_code)
 
-        model = load_model(os.path.join(save_path, "model_%s.hdf5" % (model_code, )),
-                           compile=False)
+            return jsonify(status="Model loaded successfully!"), 200
 
-        graph = tf.get_default_graph()
+        except DeploymentError as error:
+            return jsonify(error="Deployment error: %s" % (str(error), )), 500
+    else:
+        return jsonify(error="Model code query parameter missing."), 500
 
-        @self.app.route(rule="/predict", methods=["POST"])
-        def predict():
-            with graph.as_default():
 
-                post_data = request.json
-                prediction = model.predict(post_data)
+@deployment.route(rule="/predict", methods=["POST"])
+def predict():
 
-            return prediction
+    data = request.json()
 
-    def run(self):
+    model_predictions = deployed_model.get_predictions(data=data)
 
-        self.app.run(host="0.0.0.0",
-                     port=5000,
-                     debug=False)
+    return jsonify(predictions=model_predictions)
+
+
+if __name__ == "__main__":
+
+    deployment.run(host="0.0.0.0",
+                   port=8000,
+                   debug=True)

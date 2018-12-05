@@ -37,7 +37,7 @@
                 <select class="form-control-inline" id="select_commit" name="select_commit">
                     {% if user.committed_features %}
                         {% for feature_commit in user.committed_features.keys()%}
-                            {% if feature_commit == user.latest_commit %}
+                            {% if feature_commit == user.latest_feature_commit %}
                                 <option value="{{ feature_commit }}" selected>{{ feature_commit }}</option>
                             {% else %}
                                 <option value="{{ feature_commit }}">{{ feature_commit }}</option>
@@ -52,7 +52,7 @@
                 <label for="select_commit">Select a target column: </label>
                 <select class="form-control-inline" id="select_target" name="select_target">
                     {% if user.committed_features  %}
-                        {% for feature in user.committed_features[user.latest_commit]['all_features']%}
+                        {% for feature in user.committed_features[user.latest_feature_commit]['all_features']%}
                             <option value="{{ feature }}">{{ feature }}</option>
                         {% endfor %}
                     {% else %}
@@ -85,6 +85,9 @@
                 </script>
                 <form class="form-group" action="{{ url_for('get_predictions') }}" method="GET">
                     <input type="submit" value="Download predictions" class="btn btn-primary">
+                </form>
+                <form class="form-group" action="{{ url_for('deploy_model') }}" method="GET">
+                    <input type="submit" value="Deploy model" class="btn btn-primary">
                 </form>
             {% elif backend_response["training_error"] %}
                 <h3 align="center">Model training unsuccessful!</h3>

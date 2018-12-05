@@ -1,11 +1,15 @@
 import os
+import requests
 
-from flask import Flask, Response, render_template, request, flash, url_for, redirect
+from datetime import datetime
+
+from flask import Flask, Response, render_template, request, flash, url_for, redirect, jsonify
 from flask_bootstrap import Bootstrap
 
 from utils import construct_parser, error_with_traceback
 
 from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, ADMIN, SUPER_SAFE_ADMIN_PASSWORD, \
+    DEPLOY_SERVICE_ADDRESS, \
     default_feature_code, default_model_code
 
 from session import UserSession
@@ -38,7 +42,9 @@ app.config['SECRET_KEY'] = os.urandom(12)
 
 @app.route("/login", methods=["GET", "POST"])
 def do_admin_login():
-    if request.form["password"] == SUPER_SAFE_ADMIN_PASSWORD and request.form["username"] == ADMIN:
+    if request.form["password"] == SUPER_SAFE_ADMIN_PASSWORD \
+            and \
+       request.form["username"] == ADMIN:
         user_session.logged_in = True
     else:
         flash("Wrong password!")
@@ -125,7 +131,7 @@ def features():
 
             if commit_was_pressed:
                 user_session.commit_features(feature_preview=feature_preview, all_features=all_features.columns.values)
-                backend_response["committed_feature_hash"] = user_session.latest_commit
+                backend_response["committed_feature_hash"] = user_session.latest_feature_commit
             else:
                 backend_response["feature_preview"] = feature_preview
 
@@ -172,6 +178,8 @@ def training():
             model = KerasModel(model_code=user_session.model_code)
 
             model_eval, data_with_preds = model.train_and_eval(features=all_features, target_name=target_name)
+
+            user_session.latest_trained_model = model
             user_session.latest_predictions = data_with_preds
 
             backend_response["model_eval"] = model_eval
@@ -231,6 +239,30 @@ def commits():
 def deployment():
     return render_template("deployment.html",
                            user=user_session)
+
+
+@app.route(rule="/deploy_model", methods=["GET"])
+def deploy_model():
+
+    model_code = user_session.loaded_data_name+"_"+datetime.now().strftime("%Y-%m-%d")
+
+    latest_model = user_session.latest_trained_model
+
+    latest_model.deploy(model_id=model_code)
+
+    deploy_response = requests.get(url=DEPLOY_SERVICE_ADDRESS,
+                                   params={"model_code": model_code})
+
+    response_content = deploy_response.json()
+
+    user_session.available_models.update({model_code: {"model_instance": latest_model,
+                                                       "model_summary": latest_model.summarise()}
+                                          })
+
+    if deploy_response.status_code == 200:
+        return redirect(url_for("commits"))
+    else:
+        return jsonify(error="There was an error while deploying. %s" % (response_content["error"]))
 
 
 @app.route(rule="/logout", methods=["GET"])

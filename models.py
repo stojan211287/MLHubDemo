@@ -129,6 +129,9 @@ class KerasModel:
         else:
             raise DeploymentError("Error deploying model: Model has not been trained!")
 
+    def summarise(self):
+        return self.model_instance.to_yaml()
+
     @staticmethod
     def _convert_features(features):
         return features.values

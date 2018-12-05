@@ -19,6 +19,25 @@
             x.innerHTML = "";
           }
         }
+
+    function showModelDetails(modelId) {
+
+          var descriptionDivName = "modelDescription"+modelId;
+          var detailsParagraphName = "modelDetails"+modelId;
+
+          var detailsParagraph = document.getElementById(detailsParagraphName).innerHTML;
+
+          var noDataMessage = "Model specs hidden";
+
+          var x = document.getElementById(descriptionDivName);
+
+          if (x.innerHTML === "" || x.innerHTML === noDataMessage) {
+
+            x.innerHTML = detailsParagraph;
+          } else {
+            x.innerHTML = "";
+          }
+        }
 {% endblock %}
 
 
@@ -29,7 +48,7 @@
         {% for feature_hash, user_made_feature in user.committed_features.items() %}
         <div class="block">
             <div>
-                <h5>Feature spec {{ feature_hash }} - applied to {{ user_made_feature["raw_data"] }}</h5>
+                <h5>Feature pack {{ feature_hash }} - applied to {{ user_made_feature["raw_data"] }}</h5>
                 <div id="featureDescription{{ feature_hash }}" style="font-size:15px;"></div>
                  <p id="featureDetails{{ feature_hash }}" hidden>
                  {% for user_feature in user_made_feature["code"] %}
@@ -53,13 +72,30 @@
     </div>
 {% endif %}
 <h1 align="center"> Model commits</h1>
- <div class="media-list">
+{% if user.available_models != {} %}
+    <div class="media-list">
+        {% for model_id, model_dict in user.available_models.items() %}
+        <div class="block">
+            <div>
+                <h5>Model {{ model_id }}</h5>
+                <div id="modelDescription{{ model_id }}" style="font-size:15px;"></div>
+                <p id="modelDetails{{ model_id }}" hidden>
+                    {{ model_dict["model_summary"] }};
+                </p>
+                <button onclick="showModelDetails('{{ model_id }}')">Show specs</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+   <div class="media-list">
         <div class="block">
             <div>
                 <h3>No models committed yet</h3>
                 <p>Test out and then commit feature code in the 'Models' tab.</p>
             </div>
         </div>
- </div>
+    </div>
+{% endif %}
 
 {% endblock %}

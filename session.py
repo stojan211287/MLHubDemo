@@ -8,6 +8,7 @@ class UserSession:
         self.logged_in = False
 
         self.available_datasets = datasets
+        self.available_models = dict()
 
         self.loaded_data = None
         self.loaded_data_name = None
@@ -16,9 +17,11 @@ class UserSession:
         self.model_code = None
 
         self.committed_features = None
-        self.latest_commit = None
+        self.latest_feature_commit = None
 
         self.latest_predictions = None
+
+        self.latest_trained_model = None
 
     def commit_features(self, feature_preview, all_features):
 
@@ -31,7 +34,7 @@ class UserSession:
         self.committed_features[feature_hash] = {"code": user_code_list,
                                                  "raw_data": self.loaded_data_name,
                                                  "all_features": all_features}
-        self.latest_commit = feature_hash
+        self.latest_feature_commit = feature_hash
 
     def load_data(self):
         pass

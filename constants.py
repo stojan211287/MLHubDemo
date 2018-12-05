@@ -17,6 +17,8 @@ DATASETS = {
 DATA_ERRORS = (NameError, SyntaxError, AttributeError, KeyError, ValueError, TypeError)
 TRAINING_ERRORS = (NameError, SyntaxError, AttributeError, KeyError, ValueError, TypeError)
 
+DEPLOY_SERVICE_ADDRESS = "http://0.0.0.0:8000/deploy"
+
 
 default_feature_code = \
 """
