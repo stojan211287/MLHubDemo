@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, Response, render_template, request, flash
+from flask import Flask, Response, render_template, request, flash, url_for, redirect
 from flask_bootstrap import Bootstrap
 
 from utils import construct_parser, error_with_traceback
@@ -231,6 +231,15 @@ def commits():
 def deployment():
     return render_template("deployment.html",
                            user=user_session)
+
+
+@app.route(rule="/logout", methods=["GET"])
+def logout():
+    if user_session.logged_in:
+        user_session.logged_in = False
+        return redirect(url_for("index"))
+    else:
+        pass
 
 
 if __name__ == "__main__":
