@@ -10,7 +10,6 @@ from data_errors import DataNotFoundRemotly, DatasetFormatNotSupported, Malforme
 
 
 class DataLoader:
-
     def __init__(self, local_data_dir):
 
         self.local_data_dir = local_data_dir
@@ -33,23 +32,17 @@ class DataLoader:
             if local_file_suffix.startswith("data"):
 
                 if header is not None:
-                    data_file = pd.read_csv(downloaded_file_name,
-                                            header=0,
-                                            sep=",")
+                    data_file = pd.read_csv(downloaded_file_name, header=0, sep=",")
                 else:
-                    data_file = pd.read_csv(downloaded_file_name,
-                                            header=0,
-                                            sep=",")
+                    data_file = pd.read_csv(downloaded_file_name, header=0, sep=",")
 
             elif local_file_suffix.startswith("csv"):
-                data_file = pd.read_csv(downloaded_file_name,
-                                        header=0,
-                                        sep=";")
+                data_file = pd.read_csv(downloaded_file_name, header=0, sep=";")
             else:
                 raise DatasetFormatNotSupported
         else:
-            raise MalformedDataUrl("%s is not a valid URL!" % (data_path, ))
-        
+            raise MalformedDataUrl("%s is not a valid URL!" % (data_path,))
+
         return data_file
 
     def _download_and_cache_data(self, data_url):
@@ -57,22 +50,26 @@ class DataLoader:
         dataset_name = data_url.split("/")[-1]
         url_hash = hashlib.sha256(data_url.encode()).hexdigest()
 
-        save_file_name = os.path.join(self.local_data_dir, url_hash+"."+dataset_name)
+        save_file_name = os.path.join(
+            self.local_data_dir, url_hash + "." + dataset_name
+        )
 
         # CHECK IF DATA HAS ALREADY BEEN DOWNLOADED
         if os.path.exists(save_file_name):
-            print("Data at %s already found locally. Loading..." % (data_url, ))
+            print("Data at %s already found locally. Loading..." % (data_url,))
         else:
-            print("Data at %s not found locally. Downloading..." % (data_url, ))
+            print("Data at %s not found locally. Downloading..." % (data_url,))
             try:
-                with urllib.request.urlopen(data_url) as response, \
-                open(save_file_name, "wb") as out_file:
+                with urllib.request.urlopen(data_url) as response, open(
+                    save_file_name, "wb"
+                ) as out_file:
 
                     shutil.copyfileobj(response, out_file)
 
             except URLError:
-                raise DataNotFoundRemotly("File %s not found at %s" %
-                                          (dataset_name, data_url))
+                raise DataNotFoundRemotly(
+                    "File %s not found at %s" % (dataset_name, data_url)
+                )
         return save_file_name
 
 

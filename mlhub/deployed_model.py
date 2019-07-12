@@ -12,7 +12,6 @@ class DeploymentError(Exception):
 
 
 class DeployedModel:
-
     def __init__(self):
 
         self.save_path = os.path.join(".", MODEL_SAVE_DIR)
@@ -33,12 +32,12 @@ class DeployedModel:
             model_path = os.path.join(self.save_path, "model_%s.hdf5") % (self.code,)
 
             if not os.path.exists(model_path):
-                raise DeploymentError("Model model_%s does not exist!" % (model_code, ))
+                raise DeploymentError("Model model_%s does not exist!" % (model_code,))
 
             self.model = load_model(model_path, compile=False)
 
         except ValueError:
-            raise DeploymentError("Error loading model model_%s" % (model_code, ))
+            raise DeploymentError("Error loading model model_%s" % (model_code,))
 
     def get_predictions(self, data):
 

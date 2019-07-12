@@ -3,14 +3,30 @@ import requests
 
 from datetime import datetime
 
-from flask import Flask, Response, render_template, request, flash, url_for, redirect, jsonify
+from flask import (
+    Flask,
+    Response,
+    render_template,
+    request,
+    flash,
+    url_for,
+    redirect,
+    jsonify,
+)
 from flask_bootstrap import Bootstrap
 
 from utils import construct_parser, error_with_traceback
 
-from constants import NO_OF_ROWS_TO_SHOW, DATASETS, DATA_ERRORS, ADMIN, SUPER_SAFE_ADMIN_PASSWORD, \
-    DEPLOY_SERVICE_ADDRESS, \
-    default_feature_code, default_model_code
+from constants import (
+    NO_OF_ROWS_TO_SHOW,
+    DATASETS,
+    DATA_ERRORS,
+    ADMIN,
+    SUPER_SAFE_ADMIN_PASSWORD,
+    DEPLOY_SERVICE_ADDRESS,
+    default_feature_code,
+    default_model_code,
+)
 
 from session import UserSession
 
@@ -39,16 +55,17 @@ data_loader = DataLoader(local_data_dir="./data")
 app = create_app()
 
 # RANDOMIZE SECRET KEY
-app.config['SECRET_KEY'] = os.urandom(12)
+app.config["SECRET_KEY"] = os.urandom(12)
 
 deployed_model = DeployedModel()
 
 
 @app.route("/login", methods=["GET", "POST"])
 def do_admin_login():
-    if request.form["password"] == SUPER_SAFE_ADMIN_PASSWORD \
-            and \
-       request.form["username"] == ADMIN:
+    if (
+        request.form["password"] == SUPER_SAFE_ADMIN_PASSWORD
+        and request.form["username"] == ADMIN
+    ):
         user_session.logged_in = True
     else:
         flash("Wrong password!")
@@ -58,7 +75,7 @@ def do_admin_login():
 @app.route(rule="/", methods=["GET", "POST"])
 def index():
     if not user_session.logged_in:
-        return render_template('login.html')
+        return render_template("login.html")
     else:
         return render_template("index.html")
 
@@ -66,9 +83,11 @@ def index():
 @app.route(rule="/datasets", methods=["GET", "POST"])
 def datasets():
 
-    backend_response = {"data_loading_error": None,
-                        "available_data_features": None,
-                        "loaded_data_features": None}
+    backend_response = {
+        "data_loading_error": None,
+        "available_data_features": None,
+        "loaded_data_features": None,
+    }
 
     if request.method == "POST":
         # HANDLES POST REQUEST FROM Download BUTTON
@@ -80,8 +99,7 @@ def datasets():
             user_session.loaded_data = data_loader.load_data(data_path=data_url)
             user_session.loaded_data_name = new_dataset_name
 
-            user_session.add_dataset(url=data_url,
-                                     dataset_name=new_dataset_name)
+            user_session.add_dataset(url=data_url, dataset_name=new_dataset_name)
 
             backend_response["loaded_data_features"] = user_session.loaded_data.columns
 
@@ -96,25 +114,30 @@ def datasets():
                 data_url = user_session.available_datasets[dataset_name]
                 user_session.loaded_data = data_loader.load_data(data_path=data_url)
 
-                backend_response["available_data_features"] = user_session.loaded_data.describe().\
-                    head(NO_OF_ROWS_TO_SHOW).to_json()
+                backend_response["available_data_features"] = (
+                    user_session.loaded_data.describe()
+                    .head(NO_OF_ROWS_TO_SHOW)
+                    .to_json()
+                )
 
             except DataNotFoundRemotly as error:
                 backend_response["data_loading_error"] = {"error_message": error}
 
-    return render_template("datasets.html",
-                           user=user_session,
-                           backend_response=backend_response)
+    return render_template(
+        "datasets.html", user=user_session, backend_response=backend_response
+    )
 
 
 @app.route(rule="/features", methods=["GET", "POST"])
 def features():
 
-    backend_response = {"raw_data_preview": None,
-                        "feature_preview": None,
-                        "transform_error": None,
-                        "committed_feature_hash": None,
-                        "data_loading_error": None}
+    backend_response = {
+        "raw_data_preview": None,
+        "feature_preview": None,
+        "transform_error": None,
+        "committed_feature_hash": None,
+        "data_loading_error": None,
+    }
 
     if request.method == "POST":
 
@@ -124,18 +147,28 @@ def features():
         commit_was_pressed = request.form.get("commit_button")
 
         try:
-            user_session.loaded_data = data_loader.\
-                load_data(data_path=user_session.available_datasets[user_session.loaded_data_name])
-            parser, completed_code = construct_parser(code_raw_string=user_session.feature_code)
+            user_session.loaded_data = data_loader.load_data(
+                data_path=user_session.available_datasets[user_session.loaded_data_name]
+            )
+            parser, completed_code = construct_parser(
+                code_raw_string=user_session.feature_code
+            )
 
-            backend_response["raw_data_preview"] = user_session.loaded_data.head(NO_OF_ROWS_TO_SHOW).to_json()
+            backend_response["raw_data_preview"] = user_session.loaded_data.head(
+                NO_OF_ROWS_TO_SHOW
+            ).to_json()
 
             all_features = parser.add_parsed_to_data(data=user_session.loaded_data)
             feature_preview = all_features.head(NO_OF_ROWS_TO_SHOW).to_json()
 
             if commit_was_pressed:
-                user_session.commit_features(feature_preview=feature_preview, all_features=all_features.columns.values)
-                backend_response["committed_feature_hash"] = user_session.latest_feature_commit
+                user_session.commit_features(
+                    feature_preview=feature_preview,
+                    all_features=all_features.columns.values,
+                )
+                backend_response[
+                    "committed_feature_hash"
+                ] = user_session.latest_feature_commit
             else:
                 backend_response["feature_preview"] = feature_preview
 
@@ -143,23 +176,24 @@ def features():
             backend_response["transform_error"] = error_with_traceback(error=error)
 
         except DataLoadingError as data_error:
-            backend_response["data_loading_error"] = error_with_traceback(error=data_error)
+            backend_response["data_loading_error"] = error_with_traceback(
+                error=data_error
+            )
     else:
         user_session.feature_code = default_feature_code
 
         if request.args.get("dataset"):
             user_session.loaded_data_name = request.args.get("dataset")
 
-    return render_template("feature_transform.html",
-                           user=user_session,
-                           backend_response=backend_response)
+    return render_template(
+        "feature_transform.html", user=user_session, backend_response=backend_response
+    )
 
 
 @app.route(rule="/training", methods=["GET", "POST"])
 def training():
 
-    backend_response = {"model_eval": None,
-                        "training_error": None}
+    backend_response = {"model_eval": None, "training_error": None}
 
     if request.method == "POST":
 
@@ -168,11 +202,16 @@ def training():
         target_name = request.form.get("select_target")
 
         try:
-            user_session.loaded_data_name = user_session.get_commit_data_name(commit_hash=feature_commit)
-            user_session.loaded_data = data_loader.\
-                load_data(data_path=user_session.available_datasets[user_session.loaded_data_name])
+            user_session.loaded_data_name = user_session.get_commit_data_name(
+                commit_hash=feature_commit
+            )
+            user_session.loaded_data = data_loader.load_data(
+                data_path=user_session.available_datasets[user_session.loaded_data_name]
+            )
 
-            feature_def_list = user_session.get_feature_def_list(commit_hash=feature_commit)
+            feature_def_list = user_session.get_feature_def_list(
+                commit_hash=feature_commit
+            )
             feature_code = ";".join(feature_def_list)
 
             parser, completed_code = construct_parser(code_raw_string=feature_code)
@@ -181,7 +220,9 @@ def training():
 
             model = KerasModel(model_code=user_session.model_code)
 
-            model_eval, data_with_preds = model.train_and_eval(features=all_features, target_name=target_name)
+            model_eval, data_with_preds = model.train_and_eval(
+                features=all_features, target_name=target_name
+            )
 
             user_session.latest_trained_model = model
             user_session.latest_predictions = data_with_preds
@@ -190,17 +231,23 @@ def training():
 
         except TypeError:
             no_commit_error_message = "You must select a commit to train a model!"
-            backend_response["training_error"] = error_with_traceback(error=Exception(no_commit_error_message))
+            backend_response["training_error"] = error_with_traceback(
+                error=Exception(no_commit_error_message)
+            )
 
         except (UserCodeExecutionError, InputDataError) as error:
-            code_exec_error_message = "An error occurred while executing your code: %s" % (str(error), )
-            backend_response["training_error"] = error_with_traceback(error=Exception(code_exec_error_message))
+            code_exec_error_message = (
+                "An error occurred while executing your code: %s" % (str(error),)
+            )
+            backend_response["training_error"] = error_with_traceback(
+                error=Exception(code_exec_error_message)
+            )
     else:
         user_session.model_code = default_model_code
 
-    return render_template("model_training.html",
-                           user=user_session,
-                           backend_response=backend_response)
+    return render_template(
+        "model_training.html", user=user_session, backend_response=backend_response
+    )
 
 
 @app.route(rule="/mlhub-model-predictions", methods=["GET"])
@@ -216,14 +263,13 @@ def get_predictions():
 
             for _, row_entries in data_with_model_predictions.iterrows():
                 if row_number == 0:
-                    yield ','.join(data_with_model_predictions.columns.values) + '\n'
+                    yield ",".join(data_with_model_predictions.columns.values) + "\n"
                 else:
-                    yield ','.join(row_entries.values.astype(str)) + '\n'
+                    yield ",".join(row_entries.values.astype(str)) + "\n"
 
                 row_number += 1
 
-        return Response(prediction_generator(),
-                        mimetype='text/csv')
+        return Response(prediction_generator(), mimetype="text/csv")
     else:
         raise ValueError("No model prediction data available. Train a model first.")
 
@@ -235,20 +281,20 @@ def docs():
 
 @app.route(rule="/commits", methods=["GET"])
 def commits():
-    return render_template("commits.html",
-                           user=user_session)
+    return render_template("commits.html", user=user_session)
 
 
 @app.route(rule="/deployment", methods=["GET"])
 def deployment():
-    return render_template("deployment.html",
-                           user=user_session)
+    return render_template("deployment.html", user=user_session)
 
 
 @app.route(rule="/deploy_model", methods=["GET"])
 def deploy_model():
 
-    model_code = user_session.loaded_data_name+"_"+datetime.now().strftime("%Y-%m-%d")
+    model_code = (
+        user_session.loaded_data_name + "_" + datetime.now().strftime("%Y-%m-%d")
+    )
 
     latest_model = user_session.latest_trained_model
     latest_model.deploy(model_id=model_code)
@@ -256,9 +302,14 @@ def deploy_model():
     try:
         deployed_model.load_model(model_code=model_code)
 
-        user_session.available_models.update({model_code: {"model_instance": latest_model,
-                                                           "model_summary": latest_model.summarise()}
-                                              })
+        user_session.available_models.update(
+            {
+                model_code: {
+                    "model_instance": latest_model,
+                    "model_summary": latest_model.summarise(),
+                }
+            }
+        )
         return redirect(url_for("commits"))
 
     except DeploymentError as error:
@@ -276,6 +327,4 @@ def logout():
 
 if __name__ == "__main__":
 
-    app.run(host="0.0.0.0",
-            port=5000,
-            debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
