@@ -1,4 +1,3 @@
-
 class UserCodeExecutionError(Exception):
     pass
 
@@ -9,4 +8,3 @@ class InputDataError(Exception):
 
 class DeploymentError(Exception):
     pass
-

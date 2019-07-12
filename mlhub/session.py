@@ -2,7 +2,6 @@ import hashlib
 
 
 class UserSession:
-
     def __init__(self, datasets):
 
         self.logged_in = False
@@ -31,9 +30,11 @@ class UserSession:
         feature_hash = hashlib.md5(feature_preview.encode()).hexdigest()
         user_code_list = self.feature_code.split(";")[:-1]
 
-        self.committed_features[feature_hash] = {"code": user_code_list,
-                                                 "raw_data": self.loaded_data_name,
-                                                 "all_features": all_features}
+        self.committed_features[feature_hash] = {
+            "code": user_code_list,
+            "raw_data": self.loaded_data_name,
+            "all_features": all_features,
+        }
         self.latest_feature_commit = feature_hash
 
     def load_data(self):

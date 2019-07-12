@@ -1,8 +1,10 @@
-/__pycache__
-/data
-/models
-/venv
-/.idea
-/saved_models
+*/__pycache__
+
+data/
+models/
+saved_models/
+
+venv/
+.idea/
 
 .DS_Store

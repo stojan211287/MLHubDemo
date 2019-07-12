@@ -25,7 +25,9 @@ def complete_feature_code(user_code):
 
     import_statements = """from features import FeatureDef;import numpy as np;"""
 
-    feature_def_elements = user_code.split(";")[:-1]  # ELIMINATE POSSIBLE STUFF AFTER THE LAST SEMICOLON
+    feature_def_elements = user_code.split(";")[
+        :-1
+    ]  # ELIMINATE POSSIBLE STUFF AFTER THE LAST SEMICOLON
 
     not_feature_defs = []
 
@@ -36,9 +38,9 @@ def complete_feature_code(user_code):
     for not_feature_def in not_feature_defs:
         feature_def_elements.remove(not_feature_def)
 
-    feature_list_code = "features = ["+",".join(feature_def_elements)+"]"
+    feature_list_code = "features = [" + ",".join(feature_def_elements) + "]"
 
-    return import_statements+feature_list_code
+    return import_statements + feature_list_code
 
 
 def get_data(url):
@@ -52,8 +54,12 @@ def encode_target(raw_target):
 
     unique_target_values = encoded_target.unique()
 
-    target_value_lookup = {true_target_value: target_value_code
-                           for target_value_code, true_target_value in enumerate(sorted(unique_target_values))}
+    target_value_lookup = {
+        true_target_value: target_value_code
+        for target_value_code, true_target_value in enumerate(
+            sorted(unique_target_values)
+        )
+    }
 
     for i, value in enumerate(encoded_target):
         encoded_target[i] = target_value_lookup[value]
@@ -69,11 +75,12 @@ def construct_parser(code_raw_string):
     feature_list = getattr(module_with_user_code, "features")
 
     if len(feature_list) == 0:
-        raise ValueError("Provided feature list is empty! Check your feature definition code.")
+        raise ValueError(
+            "Provided feature list is empty! Check your feature definition code."
+        )
     else:
         return FeatureParser(features=feature_list), complete_code
 
 
 def error_with_traceback(error):
-    return {"error": error,
-            "traceback": traceback.format_exc(limit=TRACEBACK_LIMIT)}
+    return {"error": error, "traceback": traceback.format_exc(limit=TRACEBACK_LIMIT)}

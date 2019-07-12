@@ -8,20 +8,27 @@ ADMIN = "admin"
 SUPER_SAFE_ADMIN_PASSWORD = "admin"
 
 DATASETS = {
-    "RedWineQuality": BASE_DATA_URL+"wine-quality/winequality-red.csv",
-    "WhiteWineQuality": BASE_DATA_URL+"wine-quality/winequality-white.csv",
-    "BreastCancerWisconsinDataset": BASE_DATA_URL+"breast-cancer-wisconsin/breast-cancer-wisconsin.data",
-    "ErrorDataset": BASE_DATA_URL+"this-is-not-a-dataset.fsv",
+    "RedWineQuality": BASE_DATA_URL + "wine-quality/winequality-red.csv",
+    "WhiteWineQuality": BASE_DATA_URL + "wine-quality/winequality-white.csv",
+    "BreastCancerWisconsinDataset": BASE_DATA_URL
+    + "breast-cancer-wisconsin/breast-cancer-wisconsin.data",
+    "ErrorDataset": BASE_DATA_URL + "this-is-not-a-dataset.fsv",
 }
 
 DATA_ERRORS = (NameError, SyntaxError, AttributeError, KeyError, ValueError, TypeError)
-TRAINING_ERRORS = (NameError, SyntaxError, AttributeError, KeyError, ValueError, TypeError)
+TRAINING_ERRORS = (
+    NameError,
+    SyntaxError,
+    AttributeError,
+    KeyError,
+    ValueError,
+    TypeError,
+)
 
 DEPLOY_SERVICE_ADDRESS = "http://0.0.0.0:8000/deploy"
 
 
-default_feature_code = \
-"""
+default_feature_code = """
 FeatureDef(
     name="log1pOfFixedAcidity",
     kind="numeric",
@@ -48,8 +55,7 @@ FeatureDef(
 );
 """
 
-default_model_code = \
-"""
+default_model_code = """
 # This is a pre-defined multi-class MLP model
 
 # Notice that it is using values D_in and D_out
@@ -77,10 +83,12 @@ model.add(Dense(D_out, activation='softmax'))
 """
 
 model_param_lookup = {
-                        "DNNClassifier": {
-                                        "hidden_units": [10, 12, 10]},
-                        "BoostedTreesClassifier": {"n_trees": 100,
-                                                   "max_depth": 6,
-                                                   "learning_rate": 0.1,
-                                                   "n_batches_per_layer": 1},
-                        "LinearClassifier": {}}
+    "DNNClassifier": {"hidden_units": [10, 12, 10]},
+    "BoostedTreesClassifier": {
+        "n_trees": 100,
+        "max_depth": 6,
+        "learning_rate": 0.1,
+        "n_batches_per_layer": 1,
+    },
+    "LinearClassifier": {},
+}

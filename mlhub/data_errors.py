@@ -1,4 +1,3 @@
-
 class DataLoadingError(Exception):
     pass
 

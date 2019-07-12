@@ -1,0 +1,8 @@
+requests
+pandas
+numpy
+flask
+Flask-Bootstrap
+tensorflow
+Keras
+gunicorn
