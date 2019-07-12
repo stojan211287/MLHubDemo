@@ -156,7 +156,6 @@ class FeatureParser:
 
 if __name__ == "__main__":
 
-    import numpy as np
     from data import DataLoader
 
     URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data"

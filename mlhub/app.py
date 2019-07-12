@@ -1,5 +1,4 @@
 import os
-import requests
 
 from datetime import datetime
 
@@ -23,7 +22,6 @@ from constants import (
     DATA_ERRORS,
     ADMIN,
     SUPER_SAFE_ADMIN_PASSWORD,
-    DEPLOY_SERVICE_ADDRESS,
     default_feature_code,
     default_model_code,
 )
