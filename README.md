@@ -10,4 +10,10 @@ With this small service you can :
 * Deploy models in a sandbox environment to test their query 
   capabilities
 
-A demo of the service is available on [Heroku](http://mfh-demo.herokuapp.com)
+A demo of the service is available on [Heroku](http://mfh-demo.herokuapp.com) - NOTE: the service might take up to 30 seconds to spin up.
+
+Upon following the link above, you will be taken to a login page; currently only a test user account is available. To access
+MLHub use the following credentials :
+
+    username: admin
+    password: admin
