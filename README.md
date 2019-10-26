@@ -1,6 +1,6 @@
 # A simple end-to-end ML playground
 
-## Inspired by the FloydHub service
+## Inspired by the [FloydHub](https://www.floydhub.com/) service
 
 With this small service you can :
 
