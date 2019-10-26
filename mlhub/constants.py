@@ -1,3 +1,5 @@
+PACKAGE_NAME = "mlhub"
+
 BASE_DATA_URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/"
 NO_OF_ROWS_TO_SHOW = 15
 TRACEBACK_LIMIT = 2
@@ -81,14 +83,3 @@ model.add(Dropout(0.5))
 
 model.add(Dense(D_out, activation='softmax'))
 """
-
-model_param_lookup = {
-    "DNNClassifier": {"hidden_units": [10, 12, 10]},
-    "BoostedTreesClassifier": {
-        "n_trees": 100,
-        "max_depth": 6,
-        "learning_rate": 0.1,
-        "n_batches_per_layer": 1,
-    },
-    "LinearClassifier": {},
-}
