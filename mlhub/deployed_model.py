@@ -3,8 +3,9 @@ import os
 import keras
 import tensorflow as tf
 
-from constants import MODEL_SAVE_DIR
 from keras.models import load_model
+
+from mlhub.constants import MODEL_SAVE_DIR
 
 
 class DeploymentError(Exception):

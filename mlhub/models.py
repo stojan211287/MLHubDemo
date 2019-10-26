@@ -7,9 +7,9 @@ import pandas as pd
 from keras import metrics
 from keras.optimizers import SGD
 
-from models_errors import UserCodeExecutionError, InputDataError, DeploymentError
-from utils import exec_user_code, encode_target
-from constants import MODEL_SAVE_DIR
+from mlhub.models_errors import UserCodeExecutionError, InputDataError, DeploymentError
+from mlhub.utils import exec_user_code, encode_target
+from mlhub.constants import MODEL_SAVE_DIR
 
 
 class KerasModel:

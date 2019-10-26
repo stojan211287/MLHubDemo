@@ -6,7 +6,7 @@ import pandas as pd
 import urllib.request
 from urllib.error import URLError
 
-from data_errors import DataNotFoundRemotly, DatasetFormatNotSupported, MalformedDataUrl
+from mlhub.data_errors import DataNotFoundRemotly, DatasetFormatNotSupported, MalformedDataUrl
 
 
 class DataLoader:

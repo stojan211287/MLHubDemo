@@ -14,9 +14,9 @@ from flask import (
 )
 from flask_bootstrap import Bootstrap
 
-from utils import construct_parser, error_with_traceback
+from mlhub.utils import construct_parser, error_with_traceback
 
-from constants import (
+from mlhub.constants import (
     NO_OF_ROWS_TO_SHOW,
     DATASETS,
     DATA_ERRORS,
@@ -26,15 +26,15 @@ from constants import (
     default_model_code,
 )
 
-from session import UserSession
+from mlhub.session import UserSession
 
-from data import DataLoader
-from data_errors import DataLoadingError, MalformedDataUrl, DataNotFoundRemotly
+from mlhub.data import DataLoader
+from mlhub.data_errors import DataLoadingError, MalformedDataUrl, DataNotFoundRemotly
 
-from models import KerasModel
-from models_errors import UserCodeExecutionError, InputDataError
+from mlhub.models import KerasModel
+from mlhub.models_errors import UserCodeExecutionError, InputDataError
 
-from deployed_model import DeploymentError, DeployedModel
+from mlhub.deployed_model import DeploymentError, DeployedModel
 
 
 def create_app():

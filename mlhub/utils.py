@@ -3,9 +3,9 @@ import sys
 import types
 import traceback
 
-from data import DataLoader
-from features import FeatureParser
-from constants import TRACEBACK_LIMIT
+from mlhub.data import DataLoader
+from mlhub.features import FeatureParser
+from mlhub.constants import TRACEBACK_LIMIT, PACKAGE_NAME
 
 
 def exec_user_code(code, module_name="feature_trans"):
@@ -14,6 +14,7 @@ def exec_user_code(code, module_name="feature_trans"):
 
     mod = types.ModuleType(module_name)
     mod.__file__ = user_module_path
+    mod.__package__ = PACKAGE_NAME
     sys.modules[module_name] = mod
 
     exec(code, mod.__dict__)
@@ -23,7 +24,7 @@ def exec_user_code(code, module_name="feature_trans"):
 
 def complete_feature_code(user_code):
 
-    import_statements = """from features import FeatureDef;import numpy as np;"""
+    import_statements = f"""from {PACKAGE_NAME}.features import FeatureDef;import numpy as np;"""
 
     feature_def_elements = user_code.split(";")[
         :-1
