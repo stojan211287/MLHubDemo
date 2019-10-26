@@ -1,1 +1,1 @@
-web: gunicorn app:app --preload
+web: gunicorn mlhub.app:app --preload
