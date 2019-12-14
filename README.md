@@ -2,6 +2,8 @@
 
 ## Inspired by the [FloydHub](https://www.floydhub.com/) service
 
+![](./examples/screen.png)
+
 With this small service you can :
 
 * Download datasets from the net
@@ -16,4 +18,4 @@ MLHub use the following credentials :
     username: admin
     password: admin
 
-![](mfhLogin.gif)
+![](./examples/mfhLogin.gif)
