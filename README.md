@@ -15,3 +15,5 @@ MLHub use the following credentials :
 
     username: admin
     password: admin
+
+![] (mfhLogin.gif)
