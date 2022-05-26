@@ -4,57 +4,169 @@
 #
 #    pip-compile --output-file=requirements-dev.txt requirements-dev.in
 #
-absl-py==0.7.1            # via tensorboard, tensorflow
-appdirs==1.4.3            # via black
-astor==0.8.0              # via tensorflow
-attrs==19.1.0             # via black
+absl-py==0.7.1
+    # via
+    #   tensorboard
+    #   tensorflow
+appdirs==1.4.3
+    # via black
+astunparse==1.6.3
+    # via tensorflow
+attrs==19.1.0
+    # via black
 black==19.10b0
-certifi==2019.6.16        # via requests
-chardet==3.0.4            # via requests
-click==7.0                # via black, flask
-dominate==2.3.5           # via flask-bootstrap
-entrypoints==0.3          # via flake8
+    # via -r requirements-dev.in
+cachetools==5.1.0
+    # via google-auth
+certifi==2019.6.16
+    # via requests
+chardet==3.0.4
+    # via requests
+click==7.0
+    # via
+    #   black
+    #   flask
+dominate==2.3.5
+    # via flask-bootstrap
+entrypoints==0.3
+    # via flake8
 flake8==3.7.8
-flask-bootstrap==3.3.7.1
+    # via -r requirements-dev.in
 flask==1.1.1
-gast==0.2.2               # via tensorflow
-google-pasta==0.1.7       # via tensorflow
-grpcio==1.22.0            # via tensorboard, tensorflow
-h5py==2.9.0               # via keras, keras-applications
-idna==2.8                 # via requests
-itsdangerous==1.1.0       # via flask
-jinja2==2.10.1            # via flask
-keras-applications==1.0.8  # via keras, tensorflow
-keras-preprocessing==1.1.0  # via keras, tensorflow
-keras==2.2.4
-markdown==3.1.1           # via tensorboard
-markupsafe==1.1.1         # via jinja2
-mccabe==0.6.1             # via flake8
+    # via
+    #   -r requirements-dev.in
+    #   flask-bootstrap
+flask-bootstrap==3.3.7.1
+    # via -r requirements-dev.in
+flatbuffers==2.0
+    # via tensorflow
+gast==0.2.2
+    # via tensorflow
+google-auth==2.6.6
+    # via
+    #   google-auth-oauthlib
+    #   tensorboard
+google-auth-oauthlib==0.4.6
+    # via tensorboard
+google-pasta==0.1.7
+    # via tensorflow
+grpcio==1.46.3
+    # via
+    #   tensorboard
+    #   tensorflow
+h5py==2.9.0
+    # via tensorflow
+idna==2.8
+    # via requests
+itsdangerous==1.1.0
+    # via flask
+jinja2==2.10.1
+    # via flask
+keras==2.7.0
+    # via
+    #   -r requirements-dev.in
+    #   tensorflow
+keras-preprocessing==1.1.2
+    # via tensorflow
+libclang==14.0.1
+    # via tensorflow
+markdown==3.1.1
+    # via tensorboard
+markupsafe==1.1.1
+    # via jinja2
+mccabe==0.6.1
+    # via flake8
 numpy==1.16.4
-opt-einsum==3.1.0         # via tensorflow
+    # via
+    #   -r requirements-dev.in
+    #   h5py
+    #   keras-preprocessing
+    #   opt-einsum
+    #   pandas
+    #   tensorboard
+    #   tensorflow
+oauthlib==3.2.0
+    # via requests-oauthlib
+opt-einsum==3.1.0
+    # via tensorflow
 pandas==0.24.2
-pathspec==0.6.0           # via black
-protobuf==3.9.0           # via tensorboard, tensorflow
-pycodestyle==2.5.0        # via flake8
-pyflakes==2.1.1           # via flake8
-python-dateutil==2.8.0    # via pandas
-pytz==2019.1              # via pandas
-pyyaml==5.1.1             # via keras
-regex==2019.12.9          # via black
+    # via -r requirements-dev.in
+pathspec==0.6.0
+    # via black
+protobuf==3.20.1
+    # via
+    #   tensorboard
+    #   tensorflow
+pyasn1==0.4.8
+    # via
+    #   pyasn1-modules
+    #   rsa
+pyasn1-modules==0.2.8
+    # via google-auth
+pycodestyle==2.5.0
+    # via flake8
+pyflakes==2.1.1
+    # via flake8
+python-dateutil==2.8.0
+    # via pandas
+pytz==2019.1
+    # via pandas
+regex==2019.12.9
+    # via black
 requests==2.22.0
-scipy==1.3.0              # via keras
-six==1.12.0               # via absl-py, grpcio, h5py, keras, keras-preprocessing, protobuf, python-dateutil, tensorboard, tensorflow
-tensorboard==1.15.0       # via tensorflow
-tensorflow-estimator==1.15.1  # via tensorflow
-tensorflow==1.15.0
-termcolor==1.1.0          # via tensorflow
-toml==0.10.0              # via black
-typed-ast==1.4.0          # via black
-urllib3==1.25.3           # via requests
-visitor==0.1.3            # via flask-bootstrap
-werkzeug==0.15.4          # via flask, tensorboard
-wheel==0.33.4             # via tensorboard, tensorflow
-wrapt==1.11.2             # via tensorflow
+    # via
+    #   -r requirements-dev.in
+    #   requests-oauthlib
+    #   tensorboard
+requests-oauthlib==1.3.1
+    # via google-auth-oauthlib
+rsa==4.8
+    # via google-auth
+six==1.12.0
+    # via
+    #   absl-py
+    #   astunparse
+    #   google-auth
+    #   grpcio
+    #   h5py
+    #   keras-preprocessing
+    #   python-dateutil
+    #   tensorflow
+tensorboard==2.9.0
+    # via tensorflow
+tensorboard-data-server==0.6.1
+    # via tensorboard
+tensorboard-plugin-wit==1.8.1
+    # via tensorboard
+tensorflow==2.7.2
+    # via -r requirements-dev.in
+tensorflow-estimator==2.7.0
+    # via tensorflow
+tensorflow-io-gcs-filesystem==0.26.0
+    # via tensorflow
+termcolor==1.1.0
+    # via tensorflow
+toml==0.10.0
+    # via black
+typed-ast==1.4.0
+    # via black
+typing-extensions==4.2.0
+    # via tensorflow
+urllib3==1.25.3
+    # via requests
+visitor==0.1.3
+    # via flask-bootstrap
+werkzeug==2.1.2
+    # via
+    #   flask
+    #   tensorboard
+wheel==0.33.4
+    # via
+    #   astunparse
+    #   tensorboard
+    #   tensorflow
+wrapt==1.11.2
+    # via tensorflow
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
